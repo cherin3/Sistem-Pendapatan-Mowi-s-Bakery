@@ -1,6 +1,7 @@
 # Mowi's Bakery
 
 Aplikasi pencatatan pendapatan bakery sederhana. Berjalan langsung di browser; tidak memakai Node.js, npm, `package.json`, atau server aplikasi.
+Link Website: (https://cherin3.github.io/Sistem-Pendapatan-Mowi-s-Bakery/)
 
 ## Struktur
 
