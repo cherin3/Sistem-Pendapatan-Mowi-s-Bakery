@@ -31,6 +31,19 @@
     document.getElementById('stat-today-note').textContent = `${today.length} transaksi tercatat`;
   }
 
+  function renderStockAlert() {
+    const lowStock = state.data.products
+      .filter((product) => product.is_active !== false && Number(product.stock) <= lowStockThreshold)
+      .sort((first, second) => Number(first.stock) - Number(second.stock));
+    const alert = document.getElementById('stock-alert');
+    alert.hidden = lowStock.length === 0;
+    if (!lowStock.length) return;
+    document.getElementById('stock-alert-title').textContent = `Stok menipis · ${lowStock.length} produk`;
+    const shownProducts = lowStock.slice(0, 3).map((product) => `${safe(product.name)} (${Number(product.stock) === 0 ? 'habis' : `${Number(product.stock)} pcs`})`);
+    const remaining = lowStock.length - shownProducts.length;
+    document.getElementById('stock-alert-products').textContent = `${shownProducts.join(', ')}${remaining > 0 ? `, +${remaining} lainnya` : ''}`;
+  }
+
   function renderChart() {
     const chart = document.getElementById('bar-chart');
     const now = new Date();
@@ -73,7 +86,7 @@
       const customer = customerName(sale.customer_id);
       const initials = customer === 'Pelanggan umum' ? 'PU' : customer.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
       const details = sale.items.map((item) => `${safe(item.product_name || productName(item.product_id))} × ${Number(item.quantity)}`).join(', ');
-      const actions = target === 'recent-table-body' ? '' : `<td class="row-actions"><button type="button" class="icon-action" title="Ubah transaksi" aria-label="Ubah transaksi" data-edit="sale" data-id="${safe(sale.id)}">✎</button><button type="button" class="icon-action danger-action" title="Hapus transaksi" aria-label="Hapus transaksi" data-delete="sale" data-id="${safe(sale.id)}">×</button></td>`;
+      const actions = target === 'recent-table-body' ? '' : `<td class="row-actions"><button type="button" class="icon-action" title="Cetak struk" aria-label="Cetak struk" data-receipt="${safe(sale.id)}">⎙</button><button type="button" class="icon-action" title="Ubah transaksi" aria-label="Ubah transaksi" data-edit="sale" data-id="${safe(sale.id)}">✎</button><button type="button" class="icon-action danger-action" title="Hapus transaksi" aria-label="Hapus transaksi" data-delete="sale" data-id="${safe(sale.id)}">×</button></td>`;
       return `<tr><td>${safe(date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }))} <span class="muted-foot">${safe(date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }))}</span></td><td><span class="table-customer"><span class="customer-initial">${safe(initials)}</span><span class="customer-name">${safe(customer)}</span></span></td><td class="table-detail" title="${details}">${details}</td><td><span class="payment-tag">${safe(sale.payment_method || 'Tunai')}</span></td><td class="align-right table-total">${money(sale.total_amount)}</td>${actions}</tr>`;
     }).join('');
   }
@@ -109,13 +122,32 @@
   }
 
   function render() {
-    renderStats(); renderChart(); renderFavorites();
+    renderStats(); renderStockAlert(); renderChart(); renderFavorites();
     renderSales(sortedSales().slice(0, 5), 'recent-table-body');
     renderTransactions(); renderProducts(); renderCustomers(); renderCustomerOptions();
     const demo = store.mode !== 'live';
     const status = document.getElementById('connection-status');
     status.className = `connection-status${demo ? '' : ' live'}`;
     status.innerHTML = `<i></i> ${demo ? 'Mode demo lokal' : 'Terhubung ke Supabase'}`;
+  }
+
+  function printReceipt(saleId) {
+    const sale = state.data.sales.find((item) => item.id === saleId);
+    if (!sale) { window.alert('Transaksi tidak ditemukan. Muat ulang daftar transaksi lalu coba lagi.'); return; }
+    const printWindow = window.open('', '_blank', 'popup,width=420,height=720');
+    if (!printWindow) { window.alert('Izinkan pop-up untuk mencetak struk.'); return; }
+    const saleDate = new Date(sale.created_at);
+    const itemRows = sale.items.map((item) => {
+      const name = safe(item.product_name || productName(item.product_id));
+      const quantity = Number(item.quantity);
+      const unitPrice = Number(item.unit_price);
+      const lineTotal = Number(item.line_total ?? unitPrice * quantity);
+      return `<tr><td colspan="2" class="item-name">${name}</td></tr><tr><td>${quantity} × ${money(unitPrice)}</td><td class="amount">${money(lineTotal)}</td></tr>`;
+    }).join('');
+    printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
+    printWindow.document.open();
+    printWindow.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Struk ${safe(sale.id)}</title><style>@page{size:80mm auto;margin:4mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#222;width:72mm;margin:0 auto;font-size:12px}header{text-align:center;border-bottom:1px dashed #777;padding:5px 0 12px}h1{font-family:Georgia,serif;font-size:20px;margin:0 0 4px}p{margin:3px 0}.meta{padding:10px 0;border-bottom:1px dashed #777}.meta p{display:flex;justify-content:space-between;gap:8px}table{width:100%;border-collapse:collapse;padding:8px 0}td{padding:3px 0;vertical-align:top}.amount{text-align:right;white-space:nowrap}.item-name{font-weight:bold;padding-top:8px}.total{display:flex;justify-content:space-between;border-top:1px dashed #777;padding-top:9px;font-weight:bold;font-size:14px}.thanks{text-align:center;border-top:1px dashed #777;margin-top:12px;padding-top:10px}@media screen{body{padding:12px}}</style></head><body><header><h1>Mowi's Bakery</h1><p>Terima kasih sudah berbelanja</p></header><section class="meta"><p><span>No. transaksi</span><span>${safe(sale.id)}</span></p><p><span>Tanggal</span><span>${safe(saleDate.toLocaleString('id-ID'))}</span></p><p><span>Pelanggan</span><span>${safe(customerName(sale.customer_id))}</span></p><p><span>Pembayaran</span><span>${safe(sale.payment_method || 'Tunai')}</span></p></section><table>${itemRows}</table><div class="total"><span>TOTAL</span><span>${money(sale.total_amount)}</span></div><footer class="thanks"><p>Semoga harimu manis!</p></footer></body></html>`);
+    printWindow.document.close();
   }
 
   function showLogin(message = '') {
@@ -225,6 +257,7 @@
       if (target.dataset.goto) { event.preventDefault(); switchView(target.dataset.goto); }
       if (target.dataset.action === 'sale') openSale();
       if (target.dataset.action === 'product' || target.dataset.action === 'customer') openEntity(target.dataset.action);
+      if (target.dataset.receipt) printReceipt(target.dataset.receipt);
       if (target.dataset.edit) {
         const entity = target.dataset.edit === 'sale' ? state.data.sales.find((item) => item.id === target.dataset.id) : state.data[target.dataset.edit === 'product' ? 'products' : 'customers'].find((item) => item.id === target.dataset.id);
         if (target.dataset.edit === 'sale') openSale(entity); else openEntity(target.dataset.edit, entity);
