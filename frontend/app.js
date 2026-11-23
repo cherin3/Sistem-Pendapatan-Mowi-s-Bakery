@@ -1,6 +1,7 @@
 (() => {
   const store = window.BakeryStore;
   const productEmojis = ['🥐', '🍞', '🍰', '🍪', '🧁', '🥖'];
+  const lowStockThreshold = 10;
   const state = { data: null, entityType: null };
 
   const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value) || 0);
@@ -87,7 +88,7 @@
   function renderProducts() {
     const products = [...state.data.products].sort((a, b) => a.name.localeCompare(b.name));
     document.getElementById('product-count').textContent = `${products.length} produk`;
-    document.getElementById('products-table-body').innerHTML = products.length ? products.map((product, index) => `<tr><td><span class="table-customer"><span class="favorite-thumb">${productEmojis[index % productEmojis.length]}</span><span class="customer-name">${safe(product.name)}</span></span></td><td>${safe(product.category || 'Lainnya')}</td><td>${Number(product.stock) <= 5 ? `<span class="stock-low">${Number(product.stock)} tersisa</span>` : `${Number(product.stock)} pcs`}</td><td class="align-right table-total">${money(product.price)}</td><td class="row-actions"><button type="button" class="icon-action" title="Ubah produk" aria-label="Ubah produk" data-edit="product" data-id="${safe(product.id)}">✎</button><button type="button" class="icon-action danger-action" title="Hapus produk" aria-label="Hapus produk" data-delete="product" data-id="${safe(product.id)}">×</button></td></tr>`).join('') : '<tr><td class="empty-row" colspan="5">Belum ada produk.</td></tr>';
+    document.getElementById('products-table-body').innerHTML = products.length ? products.map((product, index) => `<tr><td><span class="table-customer"><span class="favorite-thumb">${productEmojis[index % productEmojis.length]}</span><span class="customer-name">${safe(product.name)}</span></span></td><td>${safe(product.category || 'Lainnya')}</td><td>${Number(product.stock) <= 10 ? `<span class="stock-low">${Number(product.stock)} tersisa</span>` : `${Number(product.stock)} pcs`}</td><td class="align-right table-total">${money(product.price)}</td><td class="row-actions"><button type="button" class="icon-action" title="Ubah produk" aria-label="Ubah produk" data-edit="product" data-id="${safe(product.id)}">✎</button><button type="button" class="icon-action danger-action" title="Hapus produk" aria-label="Hapus produk" data-delete="product" data-id="${safe(product.id)}">×</button></td></tr>`).join('') : '<tr><td class="empty-row" colspan="5">Belum ada produk.</td></tr>';
   }
 
   function renderCustomers() {
