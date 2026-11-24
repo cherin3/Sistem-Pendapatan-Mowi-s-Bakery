@@ -257,7 +257,18 @@
     const form = document.getElementById('entity-form');
     form.reset();
     const configs = {
-      product: { eyebrow: 'KATALOG BAKERY', add: 'Tambah produk', edit: 'Ubah produk', fields: '<label class="field-label">Nama produk<input name="name" required maxlength="100" placeholder="Contoh: Danish pastry"></label><label class="field-label">Kategori<input name="category" required maxlength="50" placeholder="Roti, Pastry, Cake..."></label><label class="field-label">Harga jual<input name="price" type="number" min="0" step="500" required placeholder="18000"></label><label class="field-label">Stok<input name="stock" type="number" min="0" step="1" required value="0"></label>' },
+      product: { eyebrow: 'KATALOG BAKERY', add: 'Tambah produk', edit: 'Ubah produk', fields: '<label class="field-label">Nama produk<input name="name" required maxlength="100" placeholder="Contoh: Danish pastry"></label><label class="field-label">Kategori
+  <select name="category" required>
+    <option value="" disabled selected>Pilih kategori</option>
+    <option value="Pastry">🥐 Pastry</option>
+    <option value="Loaf">🍞 Loaf</option>
+    <option value="Cake">🍰 Cake</option>
+    <option value="Sourdough">🥖 Sourdough</option>
+    <option value="Sweet Buns">🍩 Sweet Buns</option>
+    <option value="Savory">🥪 Savory</option>
+    <option value="Beverage">🥤 Beverage</option>
+  </select>
+</label><label class="field-label">Harga jual<input name="price" type="number" min="0" step="500" required placeholder="18000"></label><label class="field-label">Stok<input name="stock" type="number" min="0" step="1" required value="0"></label>' },
       customer: { eyebrow: 'KOMUNITAS MOWI\'S', add: 'Tambah pelanggan', edit: 'Ubah pelanggan', fields: '<label class="field-label">Nama pelanggan<input name="name" required maxlength="100" placeholder="Nama lengkap"></label><label class="field-label">Nomor telepon<input name="phone" type="tel" maxlength="30" placeholder="08xx xxxx xxxx"></label>' }
     };
     const config = configs[type];
