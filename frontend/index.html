@@ -128,7 +128,15 @@
       <div class="field-label line-items-label">Item pesanan <button class="inline-add" type="button" id="add-sale-item">+ Tambah item</button></div>
       <div class="sale-items" id="sale-items"></div>
       <div class="sale-total"><span>Total penjualan</span><strong id="sale-total-preview">Rp0</strong></div>
-      <label class="field-label">Metode pembayaran<select id="sale-payment" name="payment_method"><option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="QRIS">QRIS</option><option value="Kartu">Kartu</option></select></label>
+      <label class="field-label">
+  Metode pembayaran
+  <select id="sale-payment" name="payment_method">
+    <option value="Cash">Cash</option>
+    <option value="Credit Card">Credit Card</option>
+    <option value="Debit Card">Debit Card</option>
+    <option value="QRIS">QRIS</option>
+  </select>
+</label>
       <div class="dialog-actions"><button class="button button-quiet" type="button" data-close="sale-dialog">Batal</button><button class="button button-primary" type="submit">Simpan transaksi</button></div>
     </form>
   </dialog>
