@@ -183,24 +183,336 @@
     status.innerHTML = `<i></i> ${demo ? 'Mode demo lokal' : 'Terhubung ke Supabase'}`;
   }
 
-  function printReceipt(saleId) {
-    const sale = state.data.sales.find((item) => item.id === saleId);
-    if (!sale) { window.alert('Transaksi tidak ditemukan. Muat ulang daftar transaksi lalu coba lagi.'); return; }
-    const printWindow = window.open('', '_blank', 'popup,width=420,height=720');
-    if (!printWindow) { window.alert('Izinkan pop-up untuk mencetak struk.'); return; }
-    const saleDate = new Date(sale.created_at);
-    const itemRows = sale.items.map((item) => {
-      const name = safe(item.product_name || productName(item.product_id));
-      const quantity = Number(item.quantity);
-      const unitPrice = Number(item.unit_price);
-      const lineTotal = Number(item.line_total ?? unitPrice * quantity);
-      return `<tr><td colspan="2" class="item-name">${name}</td></tr><tr><td>${quantity} × ${money(unitPrice)}</td><td class="amount">${money(lineTotal)}</td></tr>`;
-    }).join('');
-    printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
-    printWindow.document.open();
-    printWindow.document.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Struk ${safe(sale.id)}</title><style>@page{size:80mm auto;margin:4mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#222;width:72mm;margin:0 auto;font-size:12px}header{text-align:center;border-bottom:1px dashed #777;padding:5px 0 12px}h1{font-family:Georgia,serif;font-size:20px;margin:0 0 4px}p{margin:3px 0}.meta{padding:10px 0;border-bottom:1px dashed #777}.meta p{display:flex;justify-content:space-between;gap:8px}table{width:100%;border-collapse:collapse;padding:8px 0}td{padding:3px 0;vertical-align:top}.amount{text-align:right;white-space:nowrap}.item-name{font-weight:bold;padding-top:8px}.total{display:flex;justify-content:space-between;border-top:1px dashed #777;padding-top:9px;font-weight:bold;font-size:14px}.thanks{text-align:center;border-top:1px dashed #777;margin-top:12px;padding-top:10px}@media screen{body{padding:12px}}</style></head><body><header><h1>Mowi's Bakery</h1><p>Terima kasih sudah berbelanja</p></header><section class="meta"><p><span>No. transaksi</span><span>${safe(sale.id)}</span></p><p><span>Tanggal</span><span>${safe(saleDate.toLocaleString('id-ID'))}</span></p><p><span>Pelanggan</span><span>${safe(customerName(sale.customer_id))}</span></p><p><span>Pembayaran</span><span>${safe(sale.payment_method || 'Tunai')}</span></p></section><table>${itemRows}</table><div class="total"><span>TOTAL</span><span>${money(sale.total_amount)}</span></div><footer class="thanks"><p>Semoga harimu manis!</p></footer></body></html>`);
-    printWindow.document.close();
+
+function printReceipt(saleId) {
+  const sale = state.data.sales.find((item) => item.id === saleId);
+
+  if (!sale) {
+    window.alert('Transaksi tidak ditemukan. Muat ulang daftar transaksi lalu coba lagi.');
+    return;
   }
+
+  const printWindow = window.open('', '_blank', 'popup,width=460,height=780');
+
+  if (!printWindow) {
+    window.alert('Izinkan pop-up untuk mencetak struk.');
+    return;
+  }
+
+  const saleDate = new Date(sale.created_at);
+
+  const itemRows = sale.items.map((item) => {
+    const name = safe(item.product_name || productName(item.product_id));
+    const quantity = Number(item.quantity);
+    const unitPrice = Number(item.unit_price);
+    const lineTotal = Number(item.line_total ?? unitPrice * quantity);
+
+    return `
+      <div class="item">
+        <div class="item-name">${name}</div>
+        <div class="item-detail">
+          <span>${quantity} × ${money(unitPrice)}</span>
+          <span class="item-price">${money(lineTotal)}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const bunny = `
+    <svg class="bunny" viewBox="0 0 180 115" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="#805044" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M69 52 C48 10 29 5 24 30 C18 55 38 76 65 76" fill="#f4ded5"/>
+        <path d="M111 52 C132 10 151 5 156 30 C162 55 142 76 115 76" fill="#f4ded5"/>
+        <path d="M62 46 C39 35 34 43 43 59" fill="none" stroke="#d49a91" stroke-width="2"/>
+        <path d="M118 46 C141 35 146 43 137 59" fill="none" stroke="#d49a91" stroke-width="2"/>
+        <path d="M46 72 C46 35 63 16 90 16 C117 16 134 35 134 72 L134 88 L46 88 Z" fill="#fff7f1"/>
+        <path d="M60 82 C47 83 43 99 59 103 C72 106 80 96 80 87" fill="#fff7f1"/>
+        <path d="M120 82 C133 83 137 99 121 103 C108 106 100 96 100 87" fill="#fff7f1"/>
+        <path d="M74 64 L74 65 M106 64 L106 65" fill="none" stroke-width="6"/>
+        <path d="M87 74 Q90 78 93 74" fill="none" stroke-width="2.5"/>
+        <path d="M90 77 L90 82" fill="none" stroke-width="2"/>
+      </g>
+      <circle cx="59" cy="76" r="8" fill="#e9b6ad" opacity=".65"/>
+      <circle cx="121" cy="76" r="8" fill="#e9b6ad" opacity=".65"/>
+    </svg>
+  `;
+
+  printWindow.onload = () => {
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  printWindow.document.open();
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <title>Receipt - Mowi's Bakery</title>
+
+      <style>
+        @page {
+          size: 80mm auto;
+          margin: 4mm;
+        }
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          width: 72mm;
+          margin: 0 auto;
+          padding: 15px 13px;
+          background: #fffaf6;
+          color: #68483e;
+          font-family: Georgia, serif;
+          font-size: 12px;
+          line-height: 1.5;
+        }
+
+        .receipt {
+          border-top: 5px dotted #d8a49d;
+          border-bottom: 5px dotted #d8a49d;
+          padding: 17px 0;
+        }
+
+        .header {
+          text-align: center;
+          padding-bottom: 15px;
+          border-bottom: 1px solid #c99a90;
+        }
+
+        .bunny-wrap {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 7px;
+          margin-bottom: 2px;
+        }
+
+        .bunny {
+          width: 105px;
+          height: 72px;
+        }
+
+        .heart {
+          color: #bd777b;
+          font-size: 18px;
+        }
+
+        h1 {
+          font-size: 27px;
+          font-style: italic;
+          margin: 0;
+          line-height: 1.2;
+          color: #71483f;
+        }
+
+        .tagline {
+          font-size: 11px;
+          font-style: italic;
+          color: #a8756e;
+          margin-top: 5px;
+        }
+
+        .meta {
+          padding: 13px 0;
+          border-bottom: 1px solid #c99a90;
+        }
+
+        .meta-row {
+          display: grid;
+          grid-template-columns: 78px 8px minmax(0, 1fr);
+          gap: 3px;
+          margin: 5px 0;
+          font-size: 10px;
+          align-items: start;
+        }
+
+        .meta-label {
+          font-style: italic;
+        }
+
+        .meta-value {
+          overflow-wrap: anywhere;
+        }
+
+        .items {
+          padding: 13px 0 10px;
+        }
+
+        .items-heading {
+          display: flex;
+          justify-content: space-between;
+          padding: 7px 9px;
+          margin-bottom: 9px;
+          border-radius: 20px;
+          background: #f3dfda;
+          color: #744b42;
+          font-weight: bold;
+          font-size: 11px;
+        }
+
+        .items-heading span:first-child {
+          flex: 1;
+        }
+
+        .items-heading span:nth-child(2) {
+          width: 35px;
+          text-align: center;
+        }
+
+        .items-heading span:last-child {
+          width: 90px;
+          text-align: right;
+        }
+
+        .item {
+          padding: 5px 5px;
+        }
+
+        .item-name {
+          font-weight: bold;
+          font-size: 11px;
+          overflow-wrap: anywhere;
+        }
+
+        .item-detail {
+          display: flex;
+          justify-content: space-between;
+          gap: 5px;
+          color: #97756b;
+          font-size: 10px;
+          margin-top: 2px;
+        }
+
+        .item-price {
+          color: #68483e;
+          white-space: nowrap;
+        }
+
+        .total {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 5px;
+          padding: 11px 12px;
+          background: #f1d9d4;
+          border-radius: 22px;
+          font-size: 15px;
+          font-weight: bold;
+          margin-top: 5px;
+        }
+
+        .total strong {
+          white-space: nowrap;
+          font-size: 14px;
+        }
+
+        .thanks {
+          text-align: center;
+          margin-top: 13px;
+          padding: 12px 8px;
+          background: #f8e9e5;
+          border-radius: 22px;
+          color: #93665e;
+          font-size: 11px;
+        }
+
+        .thanks p {
+          margin: 3px 0;
+        }
+
+        .thanks .closing {
+          font-style: italic;
+        }
+
+        @media screen {
+          body {
+            margin: 15px auto;
+            box-shadow: 0 4px 20px rgba(90, 55, 45, .12);
+          }
+        }
+
+        @media print {
+          body {
+            background: #fffaf6;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+      <main class="receipt">
+
+        <header class="header">
+          <div class="bunny-wrap">
+            ${bunny}
+            <span class="heart">♡</span>
+          </div>
+
+          <h1>Mowi's Bakery</h1>
+          <div class="tagline">Sweet Things, Better Mood ♡</div>
+        </header>
+
+        <section class="meta">
+          <div class="meta-row">
+            <span class="meta-label">No. Transaksi</span>
+            <span>:</span>
+            <span class="meta-value">${safe(sale.id)}</span>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-label">Tanggal</span>
+            <span>:</span>
+            <span class="meta-value">${safe(saleDate.toLocaleString('id-ID'))}</span>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-label">Pelanggan</span>
+            <span>:</span>
+            <span class="meta-value">${safe(customerName(sale.customer_id) || '-')}</span>
+          </div>
+
+          <div class="meta-row">
+            <span class="meta-label">Pembayaran</span>
+            <span>:</span>
+            <span class="meta-value">${safe(sale.payment_method || 'Tunai')}</span>
+          </div>
+        </section>
+
+        <section class="items">
+          <div class="items-heading">
+            <span>Item</span>
+            <span>Qty</span>
+            <span>Harga</span>
+          </div>
+
+          ${itemRows}
+        </section>
+
+        <div class="total">
+          <span>TOTAL</span>
+          <strong>${money(sale.total_amount)}</strong>
+        </div>
+
+        <footer class="thanks">
+          <p>♥ Thank you for choosing Mowi's Bakery!</p>
+          <p class="closing">Have a lovely day ♡</p>
+        </footer>
+
+      </main>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+}
 
   function showLogin(message = '') {
     document.getElementById('app-shell').hidden = true;
