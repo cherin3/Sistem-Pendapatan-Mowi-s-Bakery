@@ -226,6 +226,9 @@ function printReceipt(saleId) {
   }
 
   const saleDate = new Date(sale.created_at);
+  const subtotal = Number(sale.subtotal_amount ?? sale.total_amount);
+  const pb1 = Number(sale.pb1_amount ?? 0);
+  const total = Number(sale.total_amount); 
 
   const itemRows = sale.items.map((item) => {
     const name = safe(item.product_name || productName(item.product_id));
@@ -463,6 +466,23 @@ const bunny = `
           white-space: nowrap;
         }
 
+        .payment-summary {
+  margin-top: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.summary-row strong {
+  white-space: nowrap;
+  font-weight: normal;
+}
+  
         .total {
           display: flex;
           justify-content: space-between;
@@ -565,11 +585,22 @@ const bunny = `
           ${itemRows}
         </section>
 
-        <div class="total">
-          <span>TOTAL</span>
-          <strong>${money(sale.total_amount)}</strong>
-        </div>
+<div class="payment-summary">
+  <div class="summary-row">
+    <span>Subtotal</span>
+    <strong>${money(subtotal)}</strong>
+  </div>
 
+  <div class="summary-row">
+    <span>PB1 (10%)</span>
+    <strong>${money(pb1)}</strong>
+  </div>
+
+  <div class="total">
+    <span>TOTAL</span>
+    <strong>${money(total)}</strong>
+  </div>
+</div>
         <footer class="thanks">
           <p>♥ Thank you for choosing Mowi's Bakery!</p>
           <p class="closing">Have a lovely day ♡</p>
