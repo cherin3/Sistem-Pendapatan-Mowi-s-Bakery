@@ -75,7 +75,20 @@
 
         <section class="view-panel" id="view-products">
           <div class="section-heading view-title"><div><span class="eyebrow">KATALOG BAKERY</span><h2>Produk</h2><p class="section-subtitle">Kelola menu dan harga jual produk.</p></div><button class="button button-primary" data-action="product"><span class="button-plus">+</span> Tambah produk</button></div>
-          <section class="surface table-surface"><div class="table-tools"><span class="table-intro">Daftar produk yang tersedia</span><span class="result-count" id="product-count"></span></div><div class="table-scroll"><table><thead><tr><th>NAMA PRODUK</th><th>KATEGORI</th><th>STOK</th><th class="align-right">HARGA</th><th>AKSI</th></tr></thead><tbody id="products-table-body"></tbody></table></div></section>
+          <section class="surface table-surface"><div class="table-tools">
+  <span class="table-intro">Daftar produk yang tersedia</span>
+  <span class="result-count" id="product-count"></span>
+</div>
+
+<div class="category-filters">
+  <button type="button" class="category-filter is-active" data-category-filter="Semua">Semua</button>
+  <button type="button" class="category-filter" data-category-filter="Pastry">🥐 Pastry</button>
+  <button type="button" class="category-filter" data-category-filter="Loaf">🍞 Loaf</button>
+  <button type="button" class="category-filter" data-category-filter="Cake">🍰 Cake</button>
+  <button type="button" class="category-filter" data-category-filter="Sourdough">🥖 Sourdough</button>
+  <button type="button" class="category-filter" data-category-filter="Sweet Buns">🍩 Sweet Buns</button>
+  <button type="button" class="category-filter" data-category-filter="Savory">🥪 Savory</button>
+</div><div class="table-scroll"><table><thead><tr><th>NAMA PRODUK</th><th>KATEGORI</th><th>STOK</th><th class="align-right">HARGA</th><th>AKSI</th></tr></thead><tbody id="products-table-body"></tbody></table></div></section>
         </section>
 
         <section class="view-panel" id="view-customers">
