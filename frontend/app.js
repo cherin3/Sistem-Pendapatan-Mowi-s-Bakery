@@ -221,86 +221,61 @@ function printReceipt(saleId) {
 
 
 
+
 const bunny = `
 <svg class="bunny" viewBox="0 0 180 150" xmlns="http://www.w3.org/2000/svg">
 
-  <!-- Left upright ear -->
-  <path d="M55 67
-    C48 48 42 17 54 11
-    C66 5 76 36 78 61
-    Q68 65 55 67Z"
-    fill="#fff7f0" stroke="#795044" stroke-width="2.5"/>
+  <!-- Left ear -->
+  <path d="M56 66
+    C48 49 43 20 53 13
+    C64 5 75 36 77 61
+    Q67 63 56 66Z"
+    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
 
-  <path d="M57 52
-    C53 34 51 18 56 17
-    C62 17 69 42 70 56Z"
-    fill="#e8b5b0"/>
+  <path d="M57 51
+    C53 35 51 19 56 17
+    C62 18 68 41 70 55Z"
+    fill="#e8b5ad"/>
 
-  <!-- Right upright ear -->
-  <path d="M102 61
-    C104 36 114 5 126 11
-    C138 17 132 48 125 67
-    Q112 65 102 61Z"
-    fill="#fff7f0" stroke="#795044" stroke-width="2.5"/>
+  <!-- Right ear -->
+  <path d="M103 61
+    C105 36 116 5 127 13
+    C137 20 132 49 124 66
+    Q113 63 103 61Z"
+    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
 
-  <path d="M110 56
-    C113 42 120 17 126 17
-    C131 18 126 34 121 52Z"
-    fill="#e8b5b0"/>
+  <path d="M110 55
+    C113 39 120 18 125 17
+    C131 19 126 37 121 52Z"
+    fill="#e8b5ad"/>
 
-  <!-- Round bunny head -->
-  <path d="M90 39
-    C65 39 43 56 41 82
-    C38 108 58 127 90 128
-    C122 127 142 108 139 82
-    C137 56 115 39 90 39Z"
-    fill="#fff7f0" stroke="#795044"
-    stroke-width="2.8"/>
+  <!-- Round face -->
+  <ellipse cx="90" cy="88" rx="49" ry="42"
+    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
 
-  <!-- Soft fur strokes -->
-  <g fill="none" stroke="#d7b9aa"
-    stroke-width="1.4" stroke-linecap="round">
-    <path d="M69 48 Q65 44 68 41"/>
-    <path d="M80 43 Q77 39 81 37"/>
-    <path d="M98 43 Q102 39 100 36"/>
-    <path d="M112 49 Q117 44 115 41"/>
-    <path d="M47 78 Q42 74 46 69"/>
-    <path d="M46 96 Q41 93 45 88"/>
-    <path d="M54 113 Q49 110 53 105"/>
-    <path d="M69 123 Q64 119 68 116"/>
-    <path d="M83 127 Q79 123 83 120"/>
-    <path d="M98 127 Q102 123 99 120"/>
-    <path d="M114 121 Q119 117 115 114"/>
-    <path d="M130 106 Q135 102 131 97"/>
-    <path d="M133 83 Q138 79 134 74"/>
-  </g>
-
-  <!-- Big cute eyes -->
-  <ellipse cx="72" cy="83" rx="4.5" ry="6"
-    fill="#654238"/>
-  <ellipse cx="108" cy="83" rx="4.5" ry="6"
-    fill="#654238"/>
-
-  <circle cx="73.5" cy="81" r="1.6" fill="white"/>
-  <circle cx="109.5" cy="81" r="1.6" fill="white"/>
+  <!-- Eyes -->
+  <ellipse cx="73" cy="82" rx="3.5" ry="4.5"
+    fill="#68483e"/>
+  <ellipse cx="107" cy="82" rx="3.5" ry="4.5"
+    fill="#68483e"/>
 
   <!-- Nose -->
-  <path d="M84 96 Q90 90 96 96
-    Q90 103 84 96Z"
-    fill="#d88f91"/>
+  <path d="M85 94 Q90 89 95 94
+    Q90 101 85 94Z"
+    fill="#d58e91"/>
 
   <!-- Mouth -->
-  <path d="M90 101 L90 106
-    M90 106 Q85 111 81 107
-    M90 106 Q95 111 99 107"
-    fill="none" stroke="#795044"
-    stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M90 99 L90 104
+    M90 104 Q85 109 81 105
+    M90 104 Q95 109 99 105"
+    fill="none" stroke="#805044"
+    stroke-width="1.7" stroke-linecap="round"/>
 
-  <!-- Rosy cheeks -->
-  <ellipse cx="60" cy="99" rx="9" ry="5"
-    fill="#e9b5ae" opacity=".7"/>
-  <ellipse cx="120" cy="99" rx="9" ry="5"
-    fill="#e9b5ae" opacity=".7"/>
+  <!-- Blush -->
+  <ellipse cx="62" cy="96" rx="8" ry="4.5"
+    fill="#e9b5ae" opacity=".75"/>
+  <ellipse cx="118" cy="96" rx="8" ry="4.5"
+    fill="#e9b5ae" opacity=".75"/>
 
 </svg>
 `;
