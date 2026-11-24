@@ -127,8 +127,20 @@
       <label class="field-label">Pelanggan <span class="optional">opsional</span><select id="sale-customer" name="customer_id"><option value="">Pelanggan umum</option></select></label>
       <div class="field-label line-items-label">Item pesanan <button class="inline-add" type="button" id="add-sale-item">+ Tambah item</button></div>
       <div class="sale-items" id="sale-items"></div>
-      <div class="sale-total"><span>Total penjualan</span><strong id="sale-total-preview">Rp0</strong></div>
-      <label class="field-label">
+<div class="sale-total-breakdown">
+  <div class="sale-total-row">
+    <span>Subtotal</span>
+    <strong id="sale-subtotal-preview">Rp0</strong>
+  </div>
+  <div class="sale-total-row">
+    <span>PB1 (10%)</span>
+    <strong id="sale-pb1-preview">Rp0</strong>
+  </div>
+  <div class="sale-total-row sale-grand-total">
+    <span>Total pembayaran</span>
+    <strong id="sale-total-preview">Rp0</strong>
+  </div>
+</div>      <label class="field-label">
   Metode pembayaran
   <select id="sale-payment" name="payment_method">
     <option value="Cash">Cash</option>
