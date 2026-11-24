@@ -271,14 +271,14 @@ const configs = {
       <label class="field-label">
         Kategori
         <select name="category" required>
-          <option value="" disabled selected>Pilih kategori</option>
-          <option value="Pastry">🥐 Pastry</option>
-          <option value="Loaf">🍞 Loaf</option>
-          <option value="Cake">🍰 Cake</option>
-          <option value="Sourdough">🥖 Sourdough</option>
-          <option value="Sweet Buns">🍩 Sweet Buns</option>
-          <option value="Savory">🥪 Savory</option>
-          <option value="Beverage">🥤 Beverage</option>
+           <option value="" disabled selected>Pilih kategori</option>
+           <option value="Beverage">🥤 Beverage</option>
+           <option value="Cake">🍰 Cake</option>
+           <option value="Loaf">🍞 Loaf</option>
+           <option value="Pastry">🥐 Pastry</option>
+           <option value="Savory">🥪 Savory</option>
+           <option value="Sourdough">🥖 Sourdough</option>
+           <option value="Sweet Buns">🍩 Sweet Buns</option>
         </select>
       </label>
 
