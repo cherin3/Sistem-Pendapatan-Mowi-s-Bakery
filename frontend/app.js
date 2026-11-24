@@ -37,9 +37,13 @@
       const date = new Date(sale.created_at);
       return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
     });
-    document.getElementById('stat-today').textContent = money(today.reduce((sum, sale) => sum + Number(sale.total_amount), 0));
-    document.getElementById('stat-month').textContent = money(month.reduce((sum, sale) => sum + Number(sale.total_amount), 0));
-    document.getElementById('stat-count').textContent = new Intl.NumberFormat('id-ID').format(month.length);
+document.getElementById('stat-today').textContent = money(
+  today.reduce((sum, sale) => sum + Number(sale.subtotal_amount ?? sale.total_amount), 0)
+);
+
+document.getElementById('stat-month').textContent = money(
+  month.reduce((sum, sale) => sum + Number(sale.subtotal_amount ?? sale.total_amount), 0)
+);    document.getElementById('stat-count').textContent = new Intl.NumberFormat('id-ID').format(month.length);
     document.getElementById('stat-products').textContent = new Intl.NumberFormat('id-ID').format(state.data.products.filter((product) => product.is_active !== false).length);
     document.getElementById('stat-today-note').textContent = `${today.length} transaksi tercatat`;
   }
