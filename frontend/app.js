@@ -61,22 +61,44 @@ document.getElementById('stat-month').textContent = money(
     document.getElementById('stock-alert-products').textContent = `${shownProducts.join(', ')}${remaining > 0 ? `, +${remaining} lainnya` : ''}`;
   }
 
-  function renderChart() {
+
+function renderChart() {
     const chart = document.getElementById('bar-chart');
     const now = new Date();
+
     const days = Array.from({ length: 7 }, (_, index) => {
-      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6 + index);
-      const amount = state.data.sales.filter((sale) => dayKey(new Date(sale.created_at)) === dayKey(date)).reduce((sum, sale) => sum + Number(sale.total_amount), 0);
+      const date = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() - 6 + index
+      );
+
+      const amount = state.data.sales
+        .filter((sale) =>
+          dayKey(new Date(sale.created_at)) === dayKey(date)
+        )
+        .reduce(
+          (sum, sale) =>
+            sum + Number(sale.subtotal_amount ?? sale.total_amount),
+          0
+        );
+
       return { date, amount };
     });
+
     const maximum = Math.max(...days.map((day) => day.amount), 1);
+
     chart.innerHTML = days.map(({ date, amount }) => {
       const today = dayKey(date) === dayKey(now);
       const height = amount ? Math.max(8, amount / maximum * 100) : 3;
+
       return `<div class="bar-column${today ? ' today' : ''}" title="${safe(date.toLocaleDateString('id-ID'))}: ${money(amount)}"><div class="bar-track"><span class="bar-fill" style="--bar-height:${height}%"></span></div><span class="bar-day">${today ? 'Hari ini' : safe(date.toLocaleDateString('id-ID', { weekday: 'short' }))}</span></div>`;
     }).join('');
-    document.getElementById('chart-total').textContent = money(days.reduce((sum, day) => sum + day.amount, 0));
-  }
+
+    document.getElementById('chart-total').textContent = money(
+      days.reduce((sum, day) => sum + day.amount, 0)
+    );
+}
 
   function renderFavorites() {
     const quantities = new Map();
