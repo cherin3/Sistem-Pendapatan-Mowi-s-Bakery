@@ -1,7 +1,16 @@
 (() => {
   const store = window.BakeryStore;
-  const productEmojis = ['🥐', '🍞', '🍰', '🍪', '🧁', '🥖'];
+  const categoryEmojis = {
+    'Pastry': '🥐',
+    'Loaf': '🍞',
+    'Cake': '🍰',
+    'Sourdough': '🥖',
+    'Sweet Buns': '🍩',
+    'Savory': '🥪'
+  };
+
   const lowStockThreshold = 10;
+  let activeProductCategory = 'Semua';
   const state = { data: null, entityType: null };
 
   const money = (value) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value) || 0);
@@ -99,9 +108,48 @@
   }
 
   function renderProducts() {
-    const products = [...state.data.products].sort((a, b) => a.name.localeCompare(b.name));
-    document.getElementById('product-count').textContent = `${products.length} produk`;
-    document.getElementById('products-table-body').innerHTML = products.length ? products.map((product, index) => `<tr><td><span class="table-customer"><span class="favorite-thumb">${productEmojis[index % productEmojis.length]}</span><span class="customer-name">${safe(product.name)}</span></span></td><td>${safe(product.category || 'Lainnya')}</td><td>${Number(product.stock) <= 10 ? `<span class="stock-low">${Number(product.stock)} tersisa</span>` : `${Number(product.stock)} pcs`}</td><td class="align-right table-total">${money(product.price)}</td><td class="row-actions"><button type="button" class="icon-action" title="Ubah produk" aria-label="Ubah produk" data-edit="product" data-id="${safe(product.id)}">✎</button><button type="button" class="icon-action danger-action" title="Hapus produk" aria-label="Hapus produk" data-delete="product" data-id="${safe(product.id)}">×</button></td></tr>`).join('') : '<tr><td class="empty-row" colspan="5">Belum ada produk.</td></tr>';
+  const allProducts = [...state.data.products]
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const products = activeProductCategory === 'Semua'
+    ? allProducts
+    : allProducts.filter(
+        (product) => product.category === activeProductCategory
+      );
+
+  document.getElementById('product-count').textContent =
+    `${products.length} produk`;
+
+  document.getElementById('products-table-body').innerHTML =
+    products.length
+      ? products.map((product) => `
+        <tr>
+          <td>
+            <span class="table-customer">
+              <span class="favorite-thumb">
+                ${categoryEmojis[product.category] || '🥐'}
+              </span>
+              <span class="customer-name">${safe(product.name)}</span>
+            </span>
+          </td>
+          <td>${safe(product.category || 'Lainnya')}</td>
+          <td>
+            ${Number(product.stock) <= lowStockThreshold
+              ? `<span class="stock-low">${Number(product.stock)} tersisa</span>`
+              : `${Number(product.stock)} pcs`}
+          </td>
+          <td class="align-right table-total">${money(product.price)}</td>
+          <td class="row-actions">
+            <button type="button" class="icon-action"
+              title="Ubah produk" aria-label="Ubah produk"
+              data-edit="product" data-id="${safe(product.id)}">✎</button>
+            <button type="button" class="icon-action danger-action"
+              title="Hapus produk" aria-label="Hapus produk"
+              data-delete="product" data-id="${safe(product.id)}">×</button>
+          </td>
+        </tr>
+      `).join('')
+      : '<tr><td class="empty-row" colspan="5">Belum ada produk.</td></tr>';
   }
 
   function renderCustomers() {
@@ -254,6 +302,19 @@
     document.addEventListener('click', (event) => {
       const target = event.target.closest('button, a');
       if (!target) return;
+      if (target.dataset.categoryFilter) {
+  activeProductCategory = target.dataset.categoryFilter;
+
+  document.querySelectorAll('.category-filter').forEach((button) => {
+    button.classList.toggle(
+      'is-active',
+      button.dataset.categoryFilter === activeProductCategory
+    );
+  });
+
+  renderProducts();
+  return;
+}
       if (target.dataset.goto) { event.preventDefault(); switchView(target.dataset.goto); }
       if (target.dataset.action === 'sale') openSale();
       if (target.dataset.action === 'product' || target.dataset.action === 'customer') openEntity(target.dataset.action);
