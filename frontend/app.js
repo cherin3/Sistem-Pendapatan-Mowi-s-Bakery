@@ -587,13 +587,26 @@ const bunny = `
     updateSaleTotal();
   }
 
-  function updateSaleTotal() {
-    const total = [...document.querySelectorAll('.sale-item-row')].reduce((sum, row) => {
-      const product = state.data.products.find((item) => item.id === row.querySelector('select').value);
-      return sum + (product ? product.price * (Number(row.querySelector('input').value) || 0) : 0);
-    }, 0);
-    document.getElementById('sale-total-preview').textContent = money(total);
-  }
+function updateSaleTotal() {
+  const subtotal = [...document.querySelectorAll('.sale-item-row')].reduce((sum, row) => {
+    const product = state.data.products.find(
+      (item) => item.id === row.querySelector('select').value
+    );
+
+    return sum + (
+      product
+        ? product.price * (Number(row.querySelector('input').value) || 0)
+        : 0
+    );
+  }, 0);
+
+  const pb1 = Math.round(subtotal * 0.10);
+  const total = subtotal + pb1;
+
+  document.getElementById('sale-subtotal-preview').textContent = money(subtotal);
+  document.getElementById('sale-pb1-preview').textContent = money(pb1);
+  document.getElementById('sale-total-preview').textContent = money(total);
+}
 
   function openSale(sale = null) {
     const form = document.getElementById('sale-form');
