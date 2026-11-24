@@ -1,1 +1,404 @@
 .stock-alert[hidden]{display:none}.stock-alert{display:flex;align-items:center;gap:12px;margin:-3px 0 16px;padding:12px 14px;border:1px solid #f0d9c8;border-radius:7px;background:#fff8f1}.stock-alert-icon{width:25px;height:25px;flex:none;display:grid;place-items:center;border-radius:50%;background:#f8e6d5;color:#a96a3e;font-weight:700;font-size:13px}.stock-alert-copy{min-width:0;flex:1}.stock-alert-copy strong{display:block;color:#704d3d;font-size:10px}.stock-alert-copy p{margin:3px 0 0;color:#947b6e;font-size:9px;line-height:1.45;overflow-wrap:anywhere}.stock-alert-link{border:0;background:transparent;color:#a96743;font-size:9px;font-weight:700;white-space:nowrap;padding:7px}.stock-alert-link span{margin-left:3px}.stock-alert-link:hover{color:#80502f}@media(max-width:560px){.stock-alert{align-items:flex-start;gap:9px;padding:10px}.stock-alert-icon{width:22px;height:22px}.stock-alert-link{align-self:center;padding-inline:4px}}
+
+/* BUKU BESAR */
+.ledger-account {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e8e8e8);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.ledger-account-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border, #e8e8e8);
+}
+
+.ledger-account-heading h3 {
+    margin: 6px 0;
+}
+
+.ledger-account-heading p,
+.ledger-final-balance span {
+    color: var(--muted, #777);
+    font-size: 12px;
+    margin: 0;
+}
+
+.ledger-final-balance {
+    text-align: right;
+}
+
+.ledger-final-balance strong {
+    display: block;
+    margin-top: 6px;
+    font-size: 17px;
+}
+
+.ledger-cash {
+    border-top: 4px solid #d99b83;
+}
+
+.ledger-bank {
+    border-top: 4px solid #83a995;
+}
+
+.ledger-revenue {
+    border-top: 4px solid #9a91bd;
+}
+
+.ledger-tax {
+    border-top: 4px solid #d6ad68;
+}
+
+.ledger-account .table-wrapper {
+    overflow-x: auto;
+}
+
+.ledger-account table {
+    min-width: 720px;
+    width: 100%;
+}
+
+/* JURNAL UMUM */
+.journal-page {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e8e8e8);
+    border-radius: 14px;
+    padding: 28px;
+    margin-top: 20px;
+    overflow: hidden;
+}
+
+.journal-title {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.journal-title h2 {
+    margin: 0 0 5px;
+    font-size: 22px;
+}
+
+.journal-title h3 {
+    margin: 0 0 5px;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.journal-title p {
+    margin: 0;
+    color: var(--muted, #777);
+    font-size: 12px;
+}
+
+.journal-page-label {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+    font-size: 12px;
+}
+
+.journal-page .table-wrapper {
+    overflow-x: auto;
+}
+
+.journal-page table {
+    width: 100%;
+    min-width: 650px;
+}
+
+.journal-page-footer {
+    text-align: center;
+    color: var(--muted, #777);
+    font-size: 11px;
+    margin-top: 18px;
+}
+
+@media (max-width: 700px) {
+    .journal-page {
+        padding: 16px;
+    }
+}
+
+/* JURNAL UMUM - REVISI PROPORSI KOLOM */
+.journal-page {
+    padding: 32px;
+}
+
+.journal-title h2 {
+    font-size: 27px;
+}
+
+.journal-title h3 {
+    font-size: 19px;
+}
+
+.journal-title p {
+    font-size: 14px;
+}
+
+.journal-page .table-wrapper {
+    overflow-x: auto;
+}
+
+.journal-page table {
+    width: 100%;
+    min-width: 760px;
+    table-layout: auto;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.journal-page th,
+.journal-page td {
+    padding: 13px 12px;
+    white-space: nowrap;
+}
+
+.journal-page th:nth-child(1),
+.journal-page td:nth-child(1) {
+    min-width: 105px;
+}
+
+.journal-page th:nth-child(2),
+.journal-page td:nth-child(2) {
+    min-width: 155px;
+    max-width: 175px;
+}
+
+.journal-page th:nth-child(3),
+.journal-page td:nth-child(3) {
+    min-width: 175px;
+    padding-left: 22px;
+}
+
+.journal-page th:nth-child(4),
+.journal-page td:nth-child(4),
+.journal-page th:nth-child(5),
+.journal-page td:nth-child(5) {
+    min-width: 145px;
+}
+
+.journal-page-footer {
+    font-size: 13px;
+    margin-top: 22px;
+}
+
+/* JURNAL UMUM - FORMAT AKUNTANSI */
+.journal-page table {
+    font-size: 16px;
+}
+
+.journal-page th {
+    font-size: 15px;
+}
+
+.journal-page td {
+    font-size: 16px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+/* Akun debit rata kiri */
+.journal-page td:nth-child(3) {
+    padding-left: 14px;
+}
+
+/* Akun kredit menjorok ke kanan */
+.journal-page td.account-credit {
+    padding-left: 42px !important;
+}
+
+/* Ukuran judul dikembalikan */
+.journal-page .journal-title h2 {
+    font-size: 22px;
+}
+
+.journal-page .journal-title h3 {
+    font-size: 16px;
+}
+
+.journal-page .journal-title p {
+    font-size: 12px;
+}
+
+/* PERBAIKAN KOLOM NO. BUKTI */
+.journal-page th:nth-child(2),
+.journal-page td:nth-child(2) {
+    width: 190px;
+    min-width: 190px;
+    max-width: 190px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.journal-page th:nth-child(3),
+.journal-page td:nth-child(3) {
+    min-width: 190px;
+    white-space: nowrap;
+}
+
+.journal-page td {
+    font-size: 13px;
+}
+
+.journal-page th {
+    font-size: 12px;
+}
+
+/* Posisi angka Debit dan Kredit */
+.journal-page td.align-right {
+    padding-right: 24px;
+}
+
+.journal-page th.align-right {
+    padding-right: 24px;
+}
+
+/* Hilangkan geser horizontal Jurnal Umum */
+.journal-page .table-wrapper {
+    overflow-x: hidden;
+}
+
+.journal-page table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+}
+
+.journal-page th:nth-child(1),
+.journal-page td:nth-child(1) {
+    width: 15%;
+}
+
+.journal-page th:nth-child(2),
+.journal-page td:nth-child(2) {
+    width: 20%;
+    overflow-wrap: anywhere;
+    word-break: break-all;
+}
+
+.journal-page th:nth-child(3),
+.journal-page td:nth-child(3) {
+    width: 25%;
+    white-space: normal;
+}
+
+.journal-page th:nth-child(4),
+.journal-page td:nth-child(4),
+.journal-page th:nth-child(5),
+.journal-page td:nth-child(5) {
+    width: 20%;
+    white-space: nowrap;
+}
+
+/* UKURAN FONT BUKU BESAR */
+.ledger-account table {
+    font-size: 14px;
+}
+
+.ledger-account th {
+    font-size: 13px;
+}
+
+.ledger-account td {
+    font-size: 14px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+}
+
+.ledger-account-heading h3 {
+    font-size: 18px;
+}
+
+.ledger-final-balance strong {
+    font-size: 17px;
+}
+.report-period-controls {
+    display: flex;
+    align-items: end;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 20px 0 24px;
+}
+
+.report-period-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.report-period-controls select {
+    min-width: 145px;
+    padding: 10px 34px 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+}
+
+.report-period-controls select:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.report-period-controls label[hidden] {
+    display: none;
+}
+/* SAMAKAN VISUAL FILTER SEMUA LAPORAN */
+.report-filter {
+    margin: 20px 0 24px;
+    padding: 16px 18px;
+    border-radius: 12px;
+}
+
+.report-filter-fields {
+    display: flex;
+    align-items: end;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.report-filter-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.report-filter-fields input,
+.report-filter-fields select {
+    min-width: 145px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+}
+
+.report-filter-fields button {
+    padding: 10px 18px;
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
