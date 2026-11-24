@@ -769,6 +769,1260 @@ const configs = {
     catch (error) { window.alert(error.message || 'Operasi gagal.'); }
   }
 
+  
+
+function renderReport(
+    reportType,
+    periodType = 'year',
+    selectedYear = new Date().getFullYear(),
+    selectedMonth = String(new Date().getMonth() + 1).padStart(2, '0')
+) {
+        const container = document.getElementById('report-content');
+    container.dataset.activeReport = reportType;
+
+    const year = Number(selectedYear);
+    const month = Number(selectedMonth);
+
+    const startDate = periodType === 'month'
+        ? new Date(year, month - 1, 1)
+        : new Date(year, 0, 1);
+
+    const endDate = periodType === 'month'
+        ? new Date(year, month, 1)
+        : new Date(year + 1, 0, 1);
+
+    const allSales = [...(state.data?.sales || [])]
+        .sort((a, b) => {
+            const dateDifference =
+                new Date(a.created_at) - new Date(b.created_at);
+
+            return dateDifference || String(a.id).localeCompare(String(b.id));
+        });
+
+    const sales = allSales.filter((sale) => {
+        const date = new Date(sale.created_at);
+        return date >= startDate && date < endDate;
+    });
+        const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April',
+        'Mei', 'Juni', 'Juli', 'Agustus',
+        'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    const availableYears = [...new Set([
+        new Date().getFullYear(),
+        year,
+        ...allSales.map((sale) => new Date(sale.created_at).getFullYear())
+    ])].sort((a, b) => b - a);
+
+    const yearOptions = availableYears.map((item) => `
+        <option value="${item}" ${item === year ? 'selected' : ''}>
+            ${item}
+        </option>
+    `).join('');
+
+    const monthOptions = monthNames.map((name, index) => `
+        <option value="${String(index + 1).padStart(2, '0')}"
+            ${index + 1 === month ? 'selected' : ''}>
+            ${name}
+        </option>
+    `).join('');
+
+    const periodControls = `
+        <div class="report-period-controls">
+            <label>
+                Periode
+                <select data-report-period data-period-type>
+                    <option value="month" ${periodType === 'month' ? 'selected' : ''}>
+                        Bulanan
+                    </option>
+                    <option value="year" ${periodType === 'year' ? 'selected' : ''}>
+                        Tahunan
+                    </option>
+                </select>
+            </label>
+
+            <label>
+                Tahun
+                <select data-report-period data-period-year>
+                    ${yearOptions}
+                </select>
+            </label>
+
+            <label ${periodType === 'year' ? 'hidden' : ''}>
+                Bulan
+                <select data-report-period data-period-month>
+                    ${monthOptions}
+                </select>
+            </label>
+        </div>
+    `;
+        const periodEnd = periodType === 'month'
+        ? new Date(year, month, 0)
+        : new Date(year, 11, 31);
+
+    const periodEndLabel = periodEnd.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    const periodTitle = `Untuk Periode yang Berakhir pada ${periodEndLabel}`;
+
+    // Susun baris jurnal berdasarkan transaksi.
+    // Satu transaksi tidak boleh terpisah ke halaman berbeda.
+    const journalPages = [];
+    const salePage = new Map();
+
+    let currentPage = [];
+    let currentPageDebit = 0;
+    let currentPageCredit = 0;
+
+    sales.forEach((sale) => {
+        const subtotal = Number(
+            sale.subtotal_amount ?? sale.total_amount ?? 0
+        );
+        const pb1 = Number(sale.pb1_amount ?? 0);
+        const total = Number(
+            sale.total_amount ?? (subtotal + pb1)
+        );
+
+        const paymentAccount =
+            sale.payment_method === 'Cash' ? 'Kas' : 'Bank';
+
+        const date = sale.created_at;
+        const reference = String(sale.id);
+        const customer = customerName(sale.customer_id);
+
+        const transactionRows = [
+            {
+                account: paymentAccount,
+                debit: total,
+                credit: 0
+            },
+            {
+                account: 'Penjualan',
+                debit: 0,
+                credit: subtotal
+            }
+        ];
+
+        if (pb1 > 0) {
+            transactionRows.push({
+                account: 'Utang PB1',
+                debit: 0,
+                credit: pb1
+            });
+        }
+
+        // Jika transaksi berikutnya membuat halaman melebihi
+        // 24 baris, pindahkan seluruh transaksi ke halaman baru.
+        if (
+            currentPage.length > 0 &&
+            currentPage.length + transactionRows.length > 24
+        ) {
+            journalPages.push({
+                rows: currentPage,
+                totalDebit: currentPageDebit,
+                totalCredit: currentPageCredit
+            });
+
+            currentPage = [];
+            currentPageDebit = 0;
+            currentPageCredit = 0;
+        }
+
+        const pageNumber = journalPages.length + 1;
+        salePage.set(sale.id, pageNumber);
+
+        transactionRows.forEach((row, index) => {
+            currentPage.push({
+                date,
+                reference,
+                account: row.account,
+                debit: row.debit,
+                credit: row.credit,
+                description: `Penjualan - ${customer}`,
+                firstRow: index === 0
+            });
+
+            currentPageDebit += row.debit;
+            currentPageCredit += row.credit;
+        });
+    });
+
+    if (currentPage.length > 0) {
+        journalPages.push({
+            rows: currentPage,
+            totalDebit: currentPageDebit,
+            totalCredit: currentPageCredit
+        });
+    }
+
+
+// =========================
+// LAPORAN PENDAPATAN
+// =========================
+if (reportType === 'revenue') {
+    const startDate = document.getElementById('revenue-start-date')?.value || '';
+    const endDate = document.getElementById('revenue-end-date')?.value || '';
+
+    const filteredSales = sales.filter((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        return (!startDate || dateKey >= startDate) &&
+               (!endDate || dateKey <= endDate);
+    });
+    const dailyRevenue = new Map();
+
+    let totalRevenue = 0;
+
+    filteredSales.forEach((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        const subtotal = Number(
+            sale.subtotal_amount ?? sale.total_amount ?? 0
+        );
+
+        totalRevenue += subtotal;
+
+        const existing = dailyRevenue.get(dateKey) || {
+            date,
+            transactions: 0,
+            revenue: 0
+        };
+
+        existing.transactions += 1;
+        existing.revenue += subtotal;
+
+        dailyRevenue.set(dateKey, existing);
+    });
+
+    const dailyRows = [...dailyRevenue.values()]
+        .sort((a, b) => a.date - b.date)
+        .map((item) => `
+            <tr>
+                <td>${safe(item.date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }))}</td>
+                <td class="align-right">
+                    ${item.transactions}
+                </td>
+                <td class="align-right">
+                    ${money(item.revenue)}
+                </td>
+            </tr>
+        `).join('');
+
+container.innerHTML = `
+    <div class="surface-heading">
+        <div>
+            <span class="eyebrow">LAPORAN AKUNTANSI</span>
+            <h3>Laporan Pendapatan</h3>
+            <p class="section-subtitle">
+                Ringkasan pendapatan dari seluruh transaksi penjualan.
+            </p>
+        </div>
+    </div>
+
+    <div class="surface report-filter">
+        <div class="report-filter-fields">
+            <label>
+                <span>Tanggal Awal</span>
+                <input type="date" id="revenue-start-date" value="${startDate}">
+            </label>
+
+            <label>
+                <span>Tanggal Akhir</span>
+                <input type="date" id="revenue-end-date" value="${endDate}">
+            </label>
+
+            <button type="button" id="apply-revenue-filter">
+                Terapkan
+            </button>
+        </div>
+    </div>
+
+    <div class="stats-grid report-summary-grid">
+        <div class="stat-card">
+            <div class="stat-top">
+                <span>Total Pendapatan</span>
+            </div>
+            <strong>${money(totalRevenue)}</strong>
+            <div class="stat-foot muted-foot">
+                Tidak termasuk PB1
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-top">
+                <span>Jumlah Transaksi</span>
+            </div>
+            <strong>${filteredSales.length}</strong>
+            <div class="stat-foot muted-foot">
+                Seluruh transaksi tercatat
+            </div>
+        </div>
+    </div>
+
+    <section class="surface table-surface">
+        <div class="surface-heading">
+            <div>
+                <h3>Ringkasan Pendapatan Harian</h3>
+                <p class="section-subtitle">
+                    Pendapatan dikelompokkan berdasarkan tanggal transaksi.
+                </p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tanggal</th>
+                        <th class="align-right">Jumlah Transaksi</th>
+                        <th class="align-right">Pendapatan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${dailyRows || `
+                        <tr>
+                            <td colspan="3" class="empty-row">
+                                Belum ada transaksi.
+                            </td>
+                        </tr>
+                    `}
+                </tbody>
+                ${filteredSales.length ? `
+                    <tfoot>
+                        <tr>
+                            <th>TOTAL</th>
+                            <th class="align-right">${filteredSales.length}</th>
+                            <th class="align-right">${money(totalRevenue)}</th>
+                        </tr>
+                    </tfoot>
+                ` : ''}
+            </table>
+        </div>
+    </section>
+`;
+        document.getElementById('apply-revenue-filter')
+        .addEventListener('click', () => {
+            const start = document.getElementById('revenue-start-date').value;
+            const end = document.getElementById('revenue-end-date').value;
+
+            if (start && end && start > end) {
+                alert('Tanggal awal tidak boleh melebihi tanggal akhir.');
+                return;
+            }
+
+            renderReport('revenue');
+        });
+    return;
+}
+
+
+// =========================
+// LAPORAN PB1
+// =========================
+if (reportType === 'pb1') {
+    const startDate = document.getElementById('pb1-start-date')?.value || '';
+    const endDate = document.getElementById('pb1-end-date')?.value || '';
+
+    const filteredSales = sales.filter((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        return (!startDate || dateKey >= startDate) &&
+               (!endDate || dateKey <= endDate);
+    });
+
+    const taxableSales = filteredSales.filter(
+        (sale) => Number(sale.pb1_amount || 0) > 0
+    );
+
+    const dailyPB1 = new Map();
+    let totalPB1 = 0;
+
+    taxableSales.forEach((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        const pb1 = Number(sale.pb1_amount || 0);
+        totalPB1 += pb1;
+
+        const existing = dailyPB1.get(dateKey) || {
+            date,
+            transactions: 0,
+            amount: 0
+        };
+
+        existing.transactions += 1;
+        existing.amount += pb1;
+
+        dailyPB1.set(dateKey, existing);
+    });
+
+    const dailyRows = [...dailyPB1.values()]
+        .sort((a, b) => a.date - b.date)
+        .map((item) => `
+            <tr>
+                <td>${safe(item.date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }))}</td>
+                <td class="align-right">${item.transactions}</td>
+                <td class="align-right">${money(item.amount)}</td>
+            </tr>
+        `).join('');
+
+    container.innerHTML = `
+        <div class="surface-heading">
+            <div>
+                <span class="eyebrow">LAPORAN AKUNTANSI</span>
+                <h3>Laporan PB1</h3>
+                <p class="section-subtitle">
+                    Ringkasan PB1 yang dipungut dari transaksi penjualan.
+                </p>
+            </div>
+        </div>
+
+        <div class="surface report-filter">
+            <div class="report-filter-fields">
+                <label>
+                    <span>Tanggal Awal</span>
+                    <input type="date" id="pb1-start-date" value="${startDate}">
+                </label>
+
+                <label>
+                    <span>Tanggal Akhir</span>
+                    <input type="date" id="pb1-end-date" value="${endDate}">
+                </label>
+
+                <button type="button" id="apply-pb1-filter">
+                    Terapkan
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid report-summary-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total PB1 Dipungut</span>
+                </div>
+                <strong>${money(totalPB1)}</strong>
+                <div class="stat-foot muted-foot">
+                    Dicatat sebagai utang PB1
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Transaksi Dikenakan PB1</span>
+                </div>
+                <strong>${taxableSales.length}</strong>
+                <div class="stat-foot muted-foot">
+                    Transaksi dengan nilai PB1
+                </div>
+            </div>
+        </div>
+
+        <section class="surface table-surface">
+            <div class="surface-heading">
+                <div>
+                    <h3>Rincian PB1 Harian</h3>
+                    <p class="section-subtitle">
+                        PB1 dikelompokkan berdasarkan tanggal transaksi.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th class="align-right">Jumlah Transaksi</th>
+                            <th class="align-right">PB1</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dailyRows || `
+                            <tr>
+                                <td colspan="3" class="empty-row">
+                                    Belum ada transaksi PB1.
+                                </td>
+                            </tr>
+                        `}
+                    </tbody>
+                    ${taxableSales.length ? `
+                        <tfoot>
+                            <tr>
+                                <th>TOTAL</th>
+                                <th class="align-right">${taxableSales.length}</th>
+                                <th class="align-right">${money(totalPB1)}</th>
+                            </tr>
+                        </tfoot>
+                    ` : ''}
+                </table>
+            </div>
+        </section>
+    `;
+
+    document.getElementById('apply-pb1-filter')
+        .addEventListener('click', () => {
+            const start = document.getElementById('pb1-start-date').value;
+            const end = document.getElementById('pb1-end-date').value;
+
+            if (start && end && start > end) {
+                alert('Tanggal awal tidak boleh melebihi tanggal akhir.');
+                return;
+            }
+
+            renderReport('pb1');
+        });
+
+    return;
+}
+
+
+// =========================
+// LAPORAN PENERIMAAN KAS/BANK
+// =========================
+if (reportType === 'cash') {
+    const startDate = document.getElementById('cash-start-date')?.value || '';
+    const endDate = document.getElementById('cash-end-date')?.value || '';
+
+    const filteredSales = sales.filter((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        return (!startDate || dateKey >= startDate) &&
+               (!endDate || dateKey <= endDate);
+    });
+
+    const dailyReceipts = new Map();
+
+    let totalCash = 0;
+    let totalBank = 0;
+
+    filteredSales.forEach((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        const total = Number(
+            sale.total_amount ??
+            (Number(sale.subtotal_amount ?? 0) + Number(sale.pb1_amount ?? 0))
+        );
+
+        const isCash = sale.payment_method === 'Cash';
+
+        if (isCash) {
+            totalCash += total;
+        } else {
+            totalBank += total;
+        }
+
+        const existing = dailyReceipts.get(dateKey) || {
+            date,
+            cash: 0,
+            bank: 0,
+            total: 0
+        };
+
+        if (isCash) {
+            existing.cash += total;
+        } else {
+            existing.bank += total;
+        }
+
+        existing.total += total;
+        dailyReceipts.set(dateKey, existing);
+    });
+
+    const totalReceipts = totalCash + totalBank;
+
+    const dailyRows = [...dailyReceipts.values()]
+        .sort((a, b) => a.date - b.date)
+        .map((item) => `
+            <tr>
+                <td>${safe(item.date.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }))}</td>
+                <td class="align-right">${money(item.cash)}</td>
+                <td class="align-right">${money(item.bank)}</td>
+                <td class="align-right">${money(item.total)}</td>
+            </tr>
+        `).join('');
+
+    container.innerHTML = `
+        <div class="surface-heading">
+            <div>
+                <span class="eyebrow">LAPORAN AKUNTANSI</span>
+                <h3>Laporan Penerimaan Kas/Bank</h3>
+                <p class="section-subtitle">
+                    Ringkasan penerimaan pembayaran dari seluruh transaksi penjualan.
+                </p>
+            </div>
+        </div>
+
+        <div class="surface report-filter">
+            <div class="report-filter-fields">
+                <label>
+                    <span>Tanggal Awal</span>
+                    <input type="date" id="cash-start-date" value="${startDate}">
+                </label>
+
+                <label>
+                    <span>Tanggal Akhir</span>
+                    <input type="date" id="cash-end-date" value="${endDate}">
+                </label>
+
+                <button type="button" id="apply-cash-filter">
+                    Terapkan
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid report-summary-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Penerimaan Kas</span>
+                </div>
+                <strong>${money(totalCash)}</strong>
+                <div class="stat-foot muted-foot">Pembayaran Cash</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Penerimaan Bank</span>
+                </div>
+                <strong>${money(totalBank)}</strong>
+                <div class="stat-foot muted-foot">
+                    QRIS, Debit Card, dan Credit Card
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Penerimaan</span>
+                </div>
+                <strong>${money(totalReceipts)}</strong>
+                <div class="stat-foot muted-foot">
+                    Kas + Bank
+                </div>
+            </div>
+        </div>
+
+        <section class="surface table-surface">
+            <div class="surface-heading">
+                <div>
+                    <h3>Rincian Penerimaan Harian</h3>
+                    <p class="section-subtitle">
+                        Penerimaan dikelompokkan berdasarkan tanggal dan metode pembayaran.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tanggal</th>
+                            <th class="align-right">Kas</th>
+                            <th class="align-right">Bank</th>
+                            <th class="align-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${dailyRows || `
+                            <tr>
+                                <td colspan="4" class="empty-row">
+                                    Belum ada penerimaan.
+                                </td>
+                            </tr>
+                        `}
+                    </tbody>
+                    ${filteredSales.length ? `
+                        <tfoot>
+                            <tr>
+                                <th>TOTAL</th>
+                                <th class="align-right">${money(totalCash)}</th>
+                                <th class="align-right">${money(totalBank)}</th>
+                                <th class="align-right">${money(totalReceipts)}</th>
+                            </tr>
+                        </tfoot>
+                    ` : ''}
+                </table>
+            </div>
+        </section>
+    `;
+
+    document.getElementById('apply-cash-filter')
+        .addEventListener('click', () => {
+            const start = document.getElementById('cash-start-date').value;
+            const end = document.getElementById('cash-end-date').value;
+
+            if (start && end && start > end) {
+                alert('Tanggal awal tidak boleh melebihi tanggal akhir.');
+                return;
+            }
+
+            renderReport('cash');
+        });
+
+    return;
+}
+
+
+// =========================
+// LAPORAN PENJUALAN PER PRODUK
+// =========================
+if (reportType === 'products') {
+    const startDate = document.getElementById('products-start-date')?.value || '';
+    const endDate = document.getElementById('products-end-date')?.value || '';
+
+    const filteredSales = sales.filter((sale) => {
+        const date = new Date(sale.created_at);
+        const dateKey = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0')
+        ].join('-');
+
+        return (!startDate || dateKey >= startDate) &&
+               (!endDate || dateKey <= endDate);
+    });
+
+    const productSummary = new Map();
+
+    filteredSales.forEach((sale) => {
+        (sale.items || []).forEach((item) => {
+            const productName = item.product_name || 'Produk tidak diketahui';
+
+            const quantity = Number(item.quantity || 0);
+            const unitPrice = Number(item.unit_price || 0);
+            const lineTotal = Number(
+                item.line_total ?? (quantity * unitPrice)
+            );
+
+            const existing = productSummary.get(productName) || {
+                name: productName,
+                quantity: 0,
+                total: 0
+            };
+
+            existing.quantity += quantity;
+            existing.total += lineTotal;
+
+            productSummary.set(productName, existing);
+        });
+    });
+
+    const products = [...productSummary.values()]
+        .sort((a, b) => b.total - a.total);
+
+    const totalQuantity = products.reduce(
+        (sum, item) => sum + item.quantity, 0
+    );
+
+    const totalSales = products.reduce(
+        (sum, item) => sum + item.total, 0
+    );
+
+    const productRows = products.map((item) => `
+        <tr>
+            <td>${safe(item.name)}</td>
+            <td class="align-right">${item.quantity}</td>
+            <td class="align-right">${money(
+                item.quantity ? item.total / item.quantity : 0
+            )}</td>
+            <td class="align-right">${money(item.total)}</td>
+        </tr>
+    `).join('');
+
+    container.innerHTML = `
+        <div class="surface-heading">
+            <div>
+                <span class="eyebrow">LAPORAN AKUNTANSI</span>
+                <h3>Laporan Penjualan per Produk</h3>
+                <p class="section-subtitle">
+                    Ringkasan jumlah dan nilai penjualan setiap produk.
+                </p>
+            </div>
+        </div>
+
+        <div class="surface report-filter">
+            <div class="report-filter-fields">
+                <label>
+                    <span>Tanggal Awal</span>
+                    <input type="date" id="products-start-date" value="${startDate}">
+                </label>
+
+                <label>
+                    <span>Tanggal Akhir</span>
+                    <input type="date" id="products-end-date" value="${endDate}">
+                </label>
+
+                <button type="button" id="apply-products-filter">
+                    Terapkan
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid report-summary-grid">
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Produk Terjual</span>
+                </div>
+                <strong>${totalQuantity}</strong>
+                <div class="stat-foot muted-foot">
+                    Seluruh unit produk
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Nilai Penjualan</span>
+                </div>
+                <strong>${money(totalSales)}</strong>
+                <div class="stat-foot muted-foot">
+                    Tidak termasuk PB1
+                </div>
+            </div>
+        </div>
+
+        <section class="surface table-surface">
+            <div class="surface-heading">
+                <div>
+                    <h3>Rincian Penjualan Produk</h3>
+                    <p class="section-subtitle">
+                        Diurutkan berdasarkan nilai penjualan terbesar.
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nama Produk</th>
+                            <th class="align-right">Jumlah Terjual</th>
+                            <th class="align-right">Harga/Pcs</th>
+                            <th class="align-right">Total Penjualan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${productRows || `
+                            <tr>
+                                <td colspan="4" class="empty-row">
+                                    Belum ada produk terjual.
+                                </td>
+                            </tr>
+                        `}
+                    </tbody>
+                    ${products.length ? `
+                        <tfoot>
+                            <tr>
+                                <th>TOTAL</th>
+                                <th class="align-right">${totalQuantity}</th>
+                                <th class="align-right">-</th>
+                                <th class="align-right">${money(totalSales)}</th>
+                            </tr>
+                        </tfoot>
+                    ` : ''}
+                </table>
+            </div>
+        </section>
+    `;
+
+    document.getElementById('apply-products-filter')
+        .addEventListener('click', () => {
+            const start = document.getElementById('products-start-date').value;
+            const end = document.getElementById('products-end-date').value;
+
+            if (start && end && start > end) {
+                alert('Tanggal awal tidak boleh melebihi tanggal akhir.');
+                return;
+            }
+
+            renderReport('products');
+        });
+
+    return;
+}
+
+    // =========================
+    // BUKU BESAR
+    // =========================
+    if (reportType === 'ledger') {
+        const accounts = {
+            'Kas': [],
+            'Bank': [],
+            'Penjualan': [],
+            'Utang PB1': []
+        };
+
+        sales.forEach((sale) => {
+            const subtotal = Number(
+                sale.subtotal_amount ?? sale.total_amount ?? 0
+            );
+            const pb1 = Number(sale.pb1_amount ?? 0);
+            const total = Number(
+                sale.total_amount ?? (subtotal + pb1)
+            );
+
+            const paymentAccount =
+                sale.payment_method === 'Cash' ? 'Kas' : 'Bank';
+
+            const entry = {
+                date: sale.created_at,
+                reference: `Hal. ${salePage.get(sale.id)}`
+            };
+
+            accounts[paymentAccount].push({
+                ...entry,
+                description: 'Penerimaan penjualan',
+                debit: total,
+                credit: 0
+            });
+
+            accounts['Penjualan'].push({
+                ...entry,
+                description: 'Penjualan',
+                debit: 0,
+                credit: subtotal
+            });
+
+            if (pb1 > 0) {
+                accounts['Utang PB1'].push({
+                    ...entry,
+                    description: 'PB1 dipungut',
+                    debit: 0,
+                    credit: pb1
+                });
+            }
+        });
+
+        const accountSections = Object.entries(accounts)
+            .map(([account, entries], index) => {
+                const debitNormal =
+                    account === 'Kas' || account === 'Bank';
+
+                let openingBalance = 0;
+
+allSales.forEach((sale) => {
+    if (new Date(sale.created_at) >= startDate) return;
+
+    const subtotal = Number(
+        sale.subtotal_amount ?? sale.total_amount ?? 0
+    );
+    const pb1 = Number(sale.pb1_amount ?? 0);
+    const total = Number(
+        sale.total_amount ?? (subtotal + pb1)
+    );
+
+    const paymentAccount =
+        sale.payment_method === 'Cash' ? 'Kas' : 'Bank';
+
+    if (account === paymentAccount) {
+        openingBalance += total;
+    }
+
+    if (account === 'Penjualan') {
+        openingBalance += subtotal;
+    }
+
+    if (account === 'Utang PB1') {
+        openingBalance += pb1;
+    }
+});
+
+let balance = openingBalance;
+let totalDebit = 0;
+let totalCredit = 0;
+
+const openingSide = openingBalance >= 0
+    ? (debitNormal ? 'D' : 'K')
+    : (debitNormal ? 'K' : 'D');
+
+const openingRow = openingBalance !== 0 ? `
+    <tr>
+        <td>-</td>
+        <td>Saldo awal</td>
+        <td>-</td>
+        <td class="align-right">-</td>
+        <td class="align-right">-</td>
+        <td class="align-right">
+            ${money(Math.abs(openingBalance))} ${openingSide}
+        </td>
+    </tr>
+` : '';
+
+const movementRows = entries.map((entry) => {
+    balance += debitNormal
+        ? entry.debit - entry.credit
+        : entry.credit - entry.debit;
+
+    totalDebit += entry.debit;
+    totalCredit += entry.credit;
+
+    const date = new Date(entry.date)
+        .toLocaleDateString('id-ID');
+
+    const saldoNormal = debitNormal
+        ? (balance >= 0 ? 'D' : 'K')
+        : (balance >= 0 ? 'K' : 'D');
+
+    return `
+        <tr>
+            <td>${safe(date)}</td>
+            <td>${safe(entry.description)}</td>
+            <td>${safe(entry.reference)}</td>
+            <td class="align-right">
+                ${entry.debit ? money(entry.debit) : '-'}
+            </td>
+            <td class="align-right">
+                ${entry.credit ? money(entry.credit) : '-'}
+            </td>
+            <td class="align-right">
+                ${money(Math.abs(balance))} ${saldoNormal}
+            </td>
+        </tr>
+    `;
+}).join('');
+
+const rows = openingRow + movementRows;
+                const finalBalance = balance >= 0
+                    ? (debitNormal ? 'D' : 'K')
+                    : (debitNormal ? 'K' : 'D');
+
+                const accountClass = [
+                    'ledger-cash',
+                    'ledger-bank',
+                    'ledger-revenue',
+                    'ledger-tax'
+                ][index];
+
+                return `
+                    <section class="ledger-account ${accountClass}">
+                        <div class="ledger-account-heading">
+                            <div>
+                                <span class="eyebrow">
+                                    BUKU BESAR · AKUN ${String(index + 1).padStart(2, '0')}
+                                </span>
+                                <h3>${account}</h3>
+                                <p>
+                                    Saldo normal:
+                                    ${debitNormal ? 'Debit' : 'Kredit'}
+                                </p>
+                            </div>
+
+                            <div class="ledger-final-balance">
+                                <span>Saldo akhir</span>
+                                <strong>
+                                    ${money(Math.abs(balance))} ${finalBalance}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Keterangan</th>
+                                        <th>Ref</th>
+                                        <th class="align-right">Debit</th>
+                                        <th class="align-right">Kredit</th>
+                                        <th class="align-right">Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rows || `
+                                        <tr>
+                                            <td colspan="6" class="empty-row">
+                                                Belum ada mutasi akun.
+                                            </td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="3">Total Mutasi</th>
+                                        <th class="align-right">
+                                            ${money(totalDebit)}
+                                        </th>
+                                        <th class="align-right">
+                                            ${money(totalCredit)}
+                                        </th>
+                                        <th class="align-right">
+                                            ${money(Math.abs(balance))}
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </section>
+                `;
+            }).join('');
+
+        container.innerHTML = `
+            <div class="surface-heading">
+                <div>
+                    <span class="eyebrow">LAPORAN AKUNTANSI</span>
+                    <h3>Buku Besar</h3>
+                    <p class="section-subtitle">
+                        Rincian mutasi dan saldo setiap akun.
+                    </p>
+                 </div>
+            </div>
+             ${periodControls}
+             ${accountSections}
+          `;
+
+        return;
+    }
+
+    // =========================
+    // JURNAL UMUM
+    // =========================
+    if (reportType === 'journal') {
+        const pagesHTML = journalPages.map((page, index) => {
+            const pageNumber = index + 1;
+
+            const rows = page.rows.map((row) => `
+                <tr>
+                    <td>
+                        ${row.firstRow
+                            ? safe(new Date(row.date).toLocaleDateString('id-ID'))
+                            : ''}
+                    </td>
+                    <td>
+                        ${row.firstRow ? safe(row.reference) : ''}
+                    </td>
+                    <td class="${row.debit > 0 ? 'account-debit' : 'account-credit'}">
+                       ${safe(row.account)}
+                    </td>
+                    <td class="align-right">
+                        ${row.debit ? money(row.debit) : '-'}
+                    </td>
+                    <td class="align-right">
+                        ${row.credit ? money(row.credit) : '-'}
+                    </td>
+                </tr>
+            `).join('');
+
+            return `
+                <section class="journal-page">
+                    <div class="journal-title">
+                        <h2>Mowi's Bakery</h2>
+                        <h3>JURNAL UMUM</h3>
+<p>${periodTitle}</p>                    
+</div>
+
+                    <div class="journal-page-label">
+                        <strong>Halaman ${pageNumber}</strong>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>No. Bukti</th>
+                                    <th>Akun</th>
+                                    <th class="align-right">Debit</th>
+                                    <th class="align-right">Kredit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3">TOTAL HALAMAN ${pageNumber}</th>
+                                    <th class="align-right">
+                                        ${money(page.totalDebit)}
+                                    </th>
+                                    <th class="align-right">
+                                        ${money(page.totalCredit)}
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <div class="journal-page-footer">
+                        Halaman ${pageNumber}
+                    </div>
+                </section>
+            `;
+        }).join('');
+
+container.innerHTML = `
+    ${periodControls}
+    ${pagesHTML || `
+        <section class="journal-page">
+            <div class="journal-title">
+                <h2>Mowi's Bakery</h2>
+                <h3>JURNAL UMUM</h3>
+                <p>${periodTitle}</p>
+            </div>
+            <p class="empty-row">Belum ada transaksi.</p>
+        </section>
+    `}
+`;
+        return;
+    }
+
+    // =========================
+    // LAPORAN LAINNYA
+    // =========================
+    container.innerHTML = `
+        <div class="surface-heading">
+            <div>
+                <span class="eyebrow">LAPORAN AKUNTANSI</span>
+                <h3>Laporan sedang disiapkan</h3>
+            </div>
+        </div>
+        <p class="section-subtitle">
+            Laporan ini akan tersedia setelah tahap berikutnya selesai.
+        </p>
+    `;
+}
+
   function setupEvents() {
     document.getElementById('login-form').addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -780,6 +2034,8 @@ const configs = {
       try {
         await store.login(form.elements.email.value.trim(), form.elements.password.value);
         state.data = store.data;
+        applyRoleAccess();
+        renderProfile();
         form.reset();
         render();
         showWorkspace();
@@ -808,6 +2064,11 @@ const configs = {
   });
 
   renderProducts();
+  return;
+}
+      
+      if (target.dataset.report) {
+  renderReport(target.dataset.report);
   return;
 }
       if (target.dataset.goto) { event.preventDefault(); switchView(target.dataset.goto); }
@@ -848,15 +2109,60 @@ const configs = {
         document.getElementById('entity-dialog').close();
       });
     });
+        document.addEventListener('change', (event) => {
+        const target = event.target;
+
+        if (!target.matches('[data-report-period]')) return;
+
+        const container = document.getElementById('report-content');
+
+        const reportType = container.dataset.activeReport;
+        const periodType = container.querySelector('[data-period-type]').value;
+        const year = Number(container.querySelector('[data-period-year]').value);
+        const month = container.querySelector('[data-period-month]').value;
+
+        renderReport(reportType, periodType, year, month);
+    });
   }
 
-  async function initialize() {
+  function applyRoleAccess() {
+    const role = store.profile?.role;
+    const isCashier = role === 'cashier';
+
+    document.querySelectorAll(
+        '.nav-link[data-view="products"], .nav-link[data-view="reports"]'
+    ).forEach((button) => {
+        button.style.display = isCashier ? 'none' : '';
+    });
+}
+function renderProfile() {
+    const profile = store.profile;
+    if (!profile) return;
+
+    const name = profile.full_name || store.user?.email || 'Pengguna';
+
+    const initials = name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map(word => word[0])
+        .join('')
+        .toUpperCase();
+
+    document.getElementById('profile-avatar').textContent = initials;
+    document.getElementById('profile-name').textContent = name;
+    document.getElementById('profile-role').textContent =
+    profile.role === 'owner' ? 'Owner' : 'Cashier';
+}  
+async function initialize() {
     updateDateLabels();
     setupEvents();
     try {
       const authenticated = await store.initialize();
       if (!authenticated) { showLogin(); return; }
       state.data = store.data;
+      renderProfile();
+      applyRoleAccess();
       render();
       showWorkspace();
       if (location.hash) switchView(location.hash.slice(1));
