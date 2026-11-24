@@ -218,24 +218,59 @@ function printReceipt(saleId) {
     `;
   }).join('');
 
-  const bunny = `
-    <svg class="bunny" viewBox="0 0 180 115" xmlns="http://www.w3.org/2000/svg">
-      <g stroke="#805044" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M69 52 C48 10 29 5 24 30 C18 55 38 76 65 76" fill="#f4ded5"/>
-        <path d="M111 52 C132 10 151 5 156 30 C162 55 142 76 115 76" fill="#f4ded5"/>
-        <path d="M62 46 C39 35 34 43 43 59" fill="none" stroke="#d49a91" stroke-width="2"/>
-        <path d="M118 46 C141 35 146 43 137 59" fill="none" stroke="#d49a91" stroke-width="2"/>
-        <path d="M46 72 C46 35 63 16 90 16 C117 16 134 35 134 72 L134 88 L46 88 Z" fill="#fff7f1"/>
-        <path d="M60 82 C47 83 43 99 59 103 C72 106 80 96 80 87" fill="#fff7f1"/>
-        <path d="M120 82 C133 83 137 99 121 103 C108 106 100 96 100 87" fill="#fff7f1"/>
-        <path d="M74 64 L74 65 M106 64 L106 65" fill="none" stroke-width="6"/>
-        <path d="M87 74 Q90 78 93 74" fill="none" stroke-width="2.5"/>
-        <path d="M90 77 L90 82" fill="none" stroke-width="2"/>
-      </g>
-      <circle cx="59" cy="76" r="8" fill="#e9b6ad" opacity=".65"/>
-      <circle cx="121" cy="76" r="8" fill="#e9b6ad" opacity=".65"/>
-    </svg>
-  `;
+ 
+const bunny = `
+  <svg class="bunny" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#805044" stroke-width="3.5"
+       stroke-linecap="round" stroke-linejoin="round">
+
+      <!-- Telinga floppy lop -->
+      <path d="M65 42
+        C54 20 39 15 31 29
+        C21 46 32 76 45 81
+        C57 85 65 67 65 42Z"
+        fill="#f1d7cd"/>
+
+      <path d="M115 42
+        C126 20 141 15 149 29
+        C159 46 148 76 135 81
+        C123 85 115 67 115 42Z"
+        fill="#f1d7cd"/>
+
+      <!-- Kepala bulat -->
+      <path d="M48 68
+        C48 38 64 20 90 20
+        C116 20 132 38 132 68
+        C132 91 115 103 90 103
+        C65 103 48 91 48 68Z"
+        fill="#fff7f1"/>
+
+      <!-- Mata -->
+      <ellipse cx="75" cy="65" rx="3.5" ry="5" fill="#805044" stroke="none"/>
+      <ellipse cx="105" cy="65" rx="3.5" ry="5" fill="#805044" stroke="none"/>
+
+      <!-- Hidung dan mulut -->
+      <path d="M86 75 Q90 70 94 75 Q90 80 86 75Z"
+        fill="#c98787" stroke="none"/>
+      <path d="M90 79 L90 84 M90 84 Q85 89 82 85 M90 84 Q95 89 98 85"
+        fill="none" stroke-width="2"/>
+
+      <!-- Pipi -->
+      <ellipse cx="62" cy="78" rx="8" ry="5"
+        fill="#eab9b0" stroke="none" opacity=".7"/>
+      <ellipse cx="118" cy="78" rx="8" ry="5"
+        fill="#eab9b0" stroke="none" opacity=".7"/>
+
+      <!-- Kaki depan -->
+      <path d="M65 91 C58 88 53 94 55 101
+        C57 109 75 110 80 102 L80 96Z"
+        fill="#fff7f1"/>
+      <path d="M115 91 C122 88 127 94 125 101
+        C123 109 105 110 100 102 L100 96Z"
+        fill="#fff7f1"/>
+    </g>
+  </svg>
+`;
 
   printWindow.onload = () => {
     printWindow.focus();
