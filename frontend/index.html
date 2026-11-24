@@ -28,11 +28,21 @@
         <button class="nav-link" data-view="transactions"><span class="nav-symbol">↗</span> Transaksi</button>
         <button class="nav-link" data-view="products"><span class="nav-symbol">▧</span> Produk</button>
         <button class="nav-link" data-view="customers"><span class="nav-symbol">◎</span> Pelanggan</button>
+        <button class="nav-link" data-view="reports">
+  <span class="nav-symbol">▤</span> Laporan Keuangan
+</button>
       </nav>
       <div class="sidebar-bottom">
         <div class="sidebar-note"><span class="note-dot"></span><div><strong>Semua terasa fresh</strong><small>Semangat untuk hari ini!</small></div></div>
         <button class="nav-link settings-link" id="logout-button"><span class="nav-symbol">↗</span> Keluar</button>
-        <div class="profile"><span class="avatar">MW</span><div><strong>Mowi's Bakery</strong><small>Administrator</small></div><span class="profile-more">•••</span></div>
+        <div class="profile">
+    <span class="avatar" id="profile-avatar">MW</span>
+    <div>
+        <strong id="profile-name">Mowi's Bakery</strong>
+        <small id="profile-role">Administrator</small>
+    </div>
+    <span class="profile-more">•••</span>
+</div>
       </div>
     </aside>
 
@@ -96,6 +106,69 @@
           <div class="section-heading view-title"><div><span class="eyebrow">KOMUNITAS MOWI'S</span><h2>Pelanggan</h2><p class="section-subtitle">Orang-orang yang selalu kembali untuk sepotong kebahagiaan.</p></div><button class="button button-primary" data-action="customer"><span class="button-plus">+</span> Tambah pelanggan</button></div>
           <section class="surface table-surface"><div class="table-tools"><span class="table-intro">Daftar pelanggan</span><span class="result-count" id="customer-count"></span></div><div class="table-scroll"><table><thead><tr><th>NAMA</th><th>NOMOR TELEPON</th><th>TRANSAKSI</th><th class="align-right">TOTAL BELANJA</th><th>AKSI</th></tr></thead><tbody id="customers-table-body"></tbody></table></div></section>
         </section>
+        
+<section class="view-panel" id="view-reports">
+  <div class="section-heading view-title">
+    <div>
+      <span class="eyebrow">LAPORAN AKUNTANSI</span>
+      <h2>Laporan Keuangan</h2>
+      <p class="section-subtitle">
+        Pantau dan evaluasi catatan keuangan Mowi's Bakery.
+      </p>
+    </div>
+  </div>
+
+  <div class="stats-grid report-menu-grid">
+    <button class="stat-card report-menu-card" data-report="journal">
+      <div class="stat-top"><span>01</span><span class="stat-icon pink-icon">▤</span></div>
+      <strong>Jurnal Umum</strong>
+      <div class="stat-foot muted-foot">Catatan debit dan kredit transaksi</div>
+    </button>
+
+    <button class="stat-card report-menu-card" data-report="ledger">
+      <div class="stat-top"><span>02</span><span class="stat-icon peach-icon">▥</span></div>
+      <strong>Buku Besar</strong>
+      <div class="stat-foot muted-foot">Mutasi dan saldo setiap akun</div>
+    </button>
+
+    <button class="stat-card report-menu-card" data-report="revenue">
+      <div class="stat-top"><span>03</span><span class="stat-icon green-icon">Rp</span></div>
+      <strong>Laporan Pendapatan</strong>
+      <div class="stat-foot muted-foot">Ringkasan pendapatan penjualan</div>
+    </button>
+
+    <button class="stat-card report-menu-card" data-report="pb1">
+      <div class="stat-top"><span>04</span><span class="stat-icon lilac-icon">%</span></div>
+      <strong>Laporan PB1</strong>
+      <div class="stat-foot muted-foot">Rincian PB1 yang dipungut</div>
+    </button>
+
+    <button class="stat-card report-menu-card" data-report="cash">
+      <div class="stat-top"><span>05</span><span class="stat-icon peach-icon">↗</span></div>
+      <strong>Penerimaan Kas/Bank</strong>
+      <div class="stat-foot muted-foot">Rincian penerimaan pembayaran</div>
+    </button>
+
+    <button class="stat-card report-menu-card" data-report="products">
+      <div class="stat-top"><span>06</span><span class="stat-icon pink-icon">✳</span></div>
+      <strong>Penjualan per Produk</strong>
+      <div class="stat-foot muted-foot">Jumlah dan nilai produk terjual</div>
+    </button>
+  </div>
+
+  <section class="surface table-surface" id="report-content">
+    <div class="surface-heading">
+      <div>
+        <span class="eyebrow">PUSAT LAPORAN</span>
+        <h3>Pilih jenis laporan</h3>
+      </div>
+    </div>
+    <p class="section-subtitle">
+      Pilih salah satu laporan di atas untuk melihat rincian data keuangan.
+    </p>
+  </section>
+</section>
+
         <footer class="page-footer"><span>Mowi's Bakery <span class="footer-separator">·</span> Dibuat dengan sepenuh hati</span><span class="connection-status" id="connection-status"><i></i> Mode demo lokal</span></footer>
       </div>
     </main>
