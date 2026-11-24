@@ -82,137 +82,200 @@ grant select, insert, update, delete on public.customers, public.products to aut
 grant select on public.sales, public.sale_items to authenticated;
 
 -- Records each sale and decrements inventory atomically. Call via Supabase RPC.
-create or replace function public.create_sale(sale_payload jsonb)
-returns uuid
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
+CREATE OR REPLACE FUNCTION public.create_sale(sale_payload jsonb)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
   new_sale_id uuid;
   item jsonb;
   selected_product public.products%rowtype;
   requested_quantity integer;
-  calculated_total numeric(12, 2) := 0;
-begin
-  if sale_payload is null or jsonb_typeof(sale_payload->'items') <> 'array'
-     or jsonb_array_length(sale_payload->'items') = 0 then
-    raise exception 'Pesanan harus memiliki setidaknya satu item.';
-  end if;
+  calculated_subtotal numeric(12,2) := 0;
+  calculated_pb1 numeric(12,2);
+  calculated_total numeric(12,2);
+BEGIN
+  IF sale_payload IS NULL
+     OR jsonb_typeof(sale_payload->'items') <> 'array'
+     OR jsonb_array_length(sale_payload->'items') = 0 THEN
+    RAISE EXCEPTION 'Pesanan harus memiliki setidaknya satu item.';
+  END IF;
 
-  if nullif(sale_payload->>'customer_id', '') is not null
-     and not exists (select 1 from public.customers where id = (sale_payload->>'customer_id')::uuid) then
-    raise exception 'Pelanggan tidak ditemukan.';
-  end if;
+  IF nullif(sale_payload->>'customer_id', '') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM public.customers
+       WHERE id = (sale_payload->>'customer_id')::uuid
+     ) THEN
+    RAISE EXCEPTION 'Pelanggan tidak ditemukan.';
+  END IF;
 
-  insert into public.sales (customer_id, payment_method)
-  values (
+  INSERT INTO public.sales (customer_id, payment_method)
+  VALUES (
     nullif(sale_payload->>'customer_id', '')::uuid,
     coalesce(nullif(sale_payload->>'payment_method', ''), 'Tunai')
   )
-  returning id into new_sale_id;
+  RETURNING id INTO new_sale_id;
 
-  for item in select value from jsonb_array_elements(sale_payload->'items') loop
+  FOR item IN SELECT value FROM jsonb_array_elements(sale_payload->'items')
+  LOOP
     requested_quantity := (item->>'quantity')::integer;
-    if requested_quantity < 1 then
-      raise exception 'Jumlah item harus lebih dari nol.';
-    end if;
 
-    select * into selected_product
-    from public.products
-    where id = (item->>'product_id')::uuid and is_active = true
-    for update;
+    IF requested_quantity < 1 THEN
+      RAISE EXCEPTION 'Jumlah item harus lebih dari nol.';
+    END IF;
 
-    if not found then
-      raise exception 'Produk tidak ditemukan atau tidak aktif.';
-    end if;
-    if selected_product.stock < requested_quantity then
-      raise exception 'Stok % tidak mencukupi.', selected_product.name;
-    end if;
+    SELECT * INTO selected_product
+    FROM public.products
+    WHERE id = (item->>'product_id')::uuid
+      AND is_active = true
+    FOR UPDATE;
 
-    update public.products
-    set stock = stock - requested_quantity
-    where id = selected_product.id;
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Produk tidak ditemukan atau tidak aktif.';
+    END IF;
 
-    insert into public.sale_items (sale_id, product_id, product_name, quantity, unit_price)
-    values (new_sale_id, selected_product.id, selected_product.name, requested_quantity, selected_product.price);
+    IF selected_product.stock < requested_quantity THEN
+      RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
+    END IF;
 
-    calculated_total := calculated_total + (selected_product.price * requested_quantity);
-  end loop;
+    UPDATE public.products
+    SET stock = stock - requested_quantity
+    WHERE id = selected_product.id;
 
-  update public.sales set total_amount = calculated_total where id = new_sale_id;
-  return new_sale_id;
-end;
+    INSERT INTO public.sale_items
+      (sale_id, product_id, product_name, quantity, unit_price)
+    VALUES
+      (new_sale_id, selected_product.id, selected_product.name,
+       requested_quantity, selected_product.price);
+
+    calculated_subtotal := calculated_subtotal
+      + (selected_product.price * requested_quantity);
+  END LOOP;
+
+  calculated_pb1 := ROUND(calculated_subtotal * 0.10, 2);
+  calculated_total := calculated_subtotal + calculated_pb1;
+
+  UPDATE public.sales
+  SET subtotal_amount = calculated_subtotal,
+      pb1_amount = calculated_pb1,
+      total_amount = calculated_total
+  WHERE id = new_sale_id;
+
+  RETURN new_sale_id;
+END;
 $$;
 
 revoke all on function public.create_sale(jsonb) from public;
 revoke all on function public.create_sale(jsonb) from anon;
 grant execute on function public.create_sale(jsonb) to authenticated;
 
-create or replace function public.update_sale(sale_id uuid, sale_payload jsonb)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
+CREATE OR REPLACE FUNCTION public.update_sale(sale_id uuid, sale_payload jsonb)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
   item jsonb;
   selected_product public.products%rowtype;
   requested_quantity integer;
-  calculated_total numeric(12, 2) := 0;
-begin
-  perform 1 from public.sales where id = sale_id for update;
-  if not found then
-    raise exception 'Transaksi tidak ditemukan.';
-  end if;
-  if sale_payload is null or jsonb_typeof(sale_payload->'items') <> 'array'
-     or jsonb_array_length(sale_payload->'items') = 0 then
-    raise exception 'Pesanan harus memiliki setidaknya satu item.';
-  end if;
-  if nullif(sale_payload->>'customer_id', '') is not null
-     and not exists (select 1 from public.customers where id = (sale_payload->>'customer_id')::uuid) then
-    raise exception 'Pelanggan tidak ditemukan.';
-  end if;
+  calculated_subtotal numeric(12,2) := 0;
+  calculated_pb1 numeric(12,2);
+  calculated_total numeric(12,2);
+BEGIN
+  PERFORM 1 FROM public.sales
+  WHERE id = sale_id
+  FOR UPDATE;
 
-  update public.products as product
-  set stock = product.stock + prior.quantity
-  from (
-    select product_id, sum(quantity)::integer as quantity
-    from public.sale_items
-    where sale_items.sale_id = update_sale.sale_id and product_id is not null
-    group by product_id
-  ) as prior
-  where product.id = prior.product_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Transaksi tidak ditemukan.';
+  END IF;
 
-  delete from public.sale_items where sale_items.sale_id = update_sale.sale_id;
-  update public.sales
-  set customer_id = nullif(sale_payload->>'customer_id', '')::uuid,
-      payment_method = coalesce(nullif(sale_payload->>'payment_method', ''), 'Tunai'),
+  IF sale_payload IS NULL
+     OR jsonb_typeof(sale_payload->'items') <> 'array'
+     OR jsonb_array_length(sale_payload->'items') = 0 THEN
+    RAISE EXCEPTION 'Pesanan harus memiliki setidaknya satu item.';
+  END IF;
+
+  IF nullif(sale_payload->>'customer_id', '') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM public.customers
+       WHERE id = (sale_payload->>'customer_id')::uuid
+     ) THEN
+    RAISE EXCEPTION 'Pelanggan tidak ditemukan.';
+  END IF;
+
+  UPDATE public.products AS product
+  SET stock = product.stock + prior.quantity
+  FROM (
+    SELECT product_id, SUM(quantity)::integer AS quantity
+    FROM public.sale_items
+    WHERE sale_items.sale_id = update_sale.sale_id
+      AND product_id IS NOT NULL
+    GROUP BY product_id
+  ) AS prior
+  WHERE product.id = prior.product_id;
+
+  DELETE FROM public.sale_items
+  WHERE sale_items.sale_id = update_sale.sale_id;
+
+  UPDATE public.sales
+  SET customer_id = nullif(sale_payload->>'customer_id', '')::uuid,
+      payment_method = coalesce(
+        nullif(sale_payload->>'payment_method', ''), 'Tunai'
+      ),
+      subtotal_amount = 0,
+      pb1_amount = 0,
       total_amount = 0
-  where id = update_sale.sale_id;
+  WHERE id = update_sale.sale_id;
 
-  for item in select value from jsonb_array_elements(sale_payload->'items') loop
+  FOR item IN SELECT value FROM jsonb_array_elements(sale_payload->'items')
+  LOOP
     requested_quantity := (item->>'quantity')::integer;
-    if requested_quantity < 1 then
-      raise exception 'Jumlah item harus lebih dari nol.';
-    end if;
-    select * into selected_product
-    from public.products
-    where id = (item->>'product_id')::uuid and is_active = true
-    for update;
-    if not found then
-      raise exception 'Produk tidak ditemukan atau tidak aktif.';
-    end if;
-    if selected_product.stock < requested_quantity then
-      raise exception 'Stok % tidak mencukupi.', selected_product.name;
-    end if;
-    update public.products set stock = stock - requested_quantity where id = selected_product.id;
-    insert into public.sale_items (sale_id, product_id, product_name, quantity, unit_price)
-    values (update_sale.sale_id, selected_product.id, selected_product.name, requested_quantity, selected_product.price);
-    calculated_total := calculated_total + (selected_product.price * requested_quantity);
-  end loop;
-  update public.sales set total_amount = calculated_total where id = update_sale.sale_id;
-end;
+
+    IF requested_quantity < 1 THEN
+      RAISE EXCEPTION 'Jumlah item harus lebih dari nol.';
+    END IF;
+
+    SELECT * INTO selected_product
+    FROM public.products
+    WHERE id = (item->>'product_id')::uuid
+      AND is_active = true
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+      RAISE EXCEPTION 'Produk tidak ditemukan atau tidak aktif.';
+    END IF;
+
+    IF selected_product.stock < requested_quantity THEN
+      RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
+    END IF;
+
+    UPDATE public.products
+    SET stock = stock - requested_quantity
+    WHERE id = selected_product.id;
+
+    INSERT INTO public.sale_items
+      (sale_id, product_id, product_name, quantity, unit_price)
+    VALUES
+      (update_sale.sale_id, selected_product.id,
+       selected_product.name, requested_quantity, selected_product.price);
+
+    calculated_subtotal := calculated_subtotal
+      + (selected_product.price * requested_quantity);
+  END LOOP;
+
+  calculated_pb1 := ROUND(calculated_subtotal * 0.10, 2);
+  calculated_total := calculated_subtotal + calculated_pb1;
+
+  UPDATE public.sales
+  SET subtotal_amount = calculated_subtotal,
+      pb1_amount = calculated_pb1,
+      total_amount = calculated_total
+  WHERE id = update_sale.sale_id;
+END;
 $$;
 
 create or replace function public.delete_sale(sale_id uuid)
