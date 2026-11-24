@@ -482,7 +482,7 @@ const bunny = `
   white-space: nowrap;
   font-weight: normal;
 }
-  
+
         .total {
           display: flex;
           justify-content: space-between;
@@ -625,13 +625,28 @@ const bunny = `
     document.getElementById('app-shell').hidden = false;
   }
 
-  function switchView(view) {
-    if (!['overview', 'transactions', 'products', 'customers'].includes(view)) return;
-    document.querySelectorAll('.view-panel').forEach((panel) => panel.classList.toggle('active', panel.id === `view-${view}`));
-    document.querySelectorAll('.nav-link[data-view]').forEach((link) => link.classList.toggle('active', link.dataset.view === view));
-    document.getElementById('page-breadcrumb').textContent = { overview: 'Ringkasan', transactions: 'Transaksi', products: 'Produk', customers: 'Pelanggan' }[view];
+
+function switchView(view) {
+    if (!['overview', 'transactions', 'products', 'customers', 'reports'].includes(view)) return;
+
+    document.querySelectorAll('.view-panel').forEach((panel) =>
+      panel.classList.toggle('active', panel.id === `view-${view}`)
+    );
+
+    document.querySelectorAll('.nav-link[data-view]').forEach((link) =>
+      link.classList.toggle('active', link.dataset.view === view)
+    );
+
+    document.getElementById('page-breadcrumb').textContent = {
+      overview: 'Ringkasan',
+      transactions: 'Transaksi',
+      products: 'Produk',
+      customers: 'Pelanggan',
+      reports: 'Laporan Keuangan'
+    }[view];
+
     history.replaceState(null, '', `#${view}`);
-  }
+}
 
   function addSaleRow(item = null) {
     const row = document.createElement('div');
