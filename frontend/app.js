@@ -1,12 +1,16 @@
 (() => {
   const store = window.BakeryStore;
+
+  const productEmojis = ['🥐', '🍞', '🍰', '🍪', '🧁', '🥖', '🥤'];
+
   const categoryEmojis = {
-    'Pastry': '🥐',
-    'Loaf': '🍞',
+    'Beverage': '🥤',
     'Cake': '🍰',
+    'Loaf': '🍞',
+    'Pastry': '🥐',
+    'Savory': '🥪',
     'Sourdough': '🥖',
-    'Sweet Buns': '🍩',
-    'Savory': '🥪'
+    'Sweet Buns': '🍩'
   };
 
   const lowStockThreshold = 10;
