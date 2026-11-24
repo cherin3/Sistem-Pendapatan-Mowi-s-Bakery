@@ -275,59 +275,147 @@
 		persist();
 	}
 
-	async function createSale(payload) {
-		validateItems(payload.items);
-		if (state.mode === 'live') {
-			await request('rpc/create_sale', { method: 'POST', body: JSON.stringify({ sale_payload: payload }) });
-			await refresh();
-			return;
-		}
-		const amounts = new Map();
-		payload.items.forEach((item) => amounts.set(item.product_id, (amounts.get(item.product_id) || 0) + Number(item.quantity)));
-		for (const [id, quantity] of amounts) {
-			const product = state.data.products.find((item) => item.id === id);
-			if (!product) throw new Error('Produk tidak ditemukan.');
-			if (Number(product.stock) < quantity) throw new Error(`Stok ${product.name} tidak mencukupi.`);
-		}
-		const items = payload.items.map((item) => {
-			const product = state.data.products.find((row) => row.id === item.product_id);
-			product.stock = Number(product.stock) - Number(item.quantity);
-			return { product_id: product.id, product_name: product.name, quantity: Number(item.quantity), unit_price: Number(product.price), line_total: Number(product.price) * Number(item.quantity) };
-		});
-		state.data.sales.push({ ...payload, id: `demo-sale-${crypto.randomUUID()}`, total_amount: items.reduce((sum, item) => sum + item.line_total, 0), created_at: new Date().toISOString(), items });
-		persist();
-	}
 
-	async function updateSale(payload) {
-		validateItems(payload.items);
-		if (state.mode === 'live') {
-			await request('rpc/update_sale', { method: 'POST', body: JSON.stringify({ sale_id: payload.id, sale_payload: payload }) });
-			await refresh();
-			return;
-		}
-		const sale = state.data.sales.find((item) => item.id === payload.id);
-		if (!sale) throw new Error('Transaksi tidak ditemukan.');
-		const available = new Map();
-		sale.items.forEach((item) => available.set(item.product_id, (available.get(item.product_id) || 0) + Number(item.quantity)));
-		const requested = new Map();
-		payload.items.forEach((item) => requested.set(item.product_id, (requested.get(item.product_id) || 0) + Number(item.quantity)));
-		for (const [id, quantity] of requested) {
-			const product = state.data.products.find((row) => row.id === id);
-			if (!product) throw new Error('Produk tidak ditemukan.');
-			if (Number(product.stock) + (available.get(id) || 0) < quantity) throw new Error(`Stok ${product.name} tidak mencukupi.`);
-		}
-		state.data.products.forEach((product) => {
-			product.stock = Number(product.stock) + (available.get(product.id) || 0) - (requested.get(product.id) || 0);
-		});
-		sale.items = payload.items.map((item) => {
-			const product = state.data.products.find((row) => row.id === item.product_id);
-			return { product_id: product.id, product_name: product.name, quantity: Number(item.quantity), unit_price: Number(product.price), line_total: Number(product.price) * Number(item.quantity) };
-		});
-		sale.customer_id = payload.customer_id || null;
-		sale.payment_method = payload.payment_method;
-		sale.total_amount = sale.items.reduce((sum, item) => sum + item.line_total, 0);
-		persist();
-	}
+async function createSale(payload) {
+    validateItems(payload.items);
+
+    if (state.mode === 'live') {
+        await request('rpc/create_sale', {
+            method: 'POST',
+            body: JSON.stringify({ sale_payload: payload })
+        });
+        await refresh();
+        return;
+    }
+
+    const amounts = new Map();
+    payload.items.forEach((item) =>
+        amounts.set(
+            item.product_id,
+            (amounts.get(item.product_id) || 0) + Number(item.quantity)
+        )
+    );
+
+    for (const [id, quantity] of amounts) {
+        const product = state.data.products.find((item) => item.id === id);
+        if (!product) throw new Error('Produk tidak ditemukan.');
+        if (Number(product.stock) < quantity) {
+            throw new Error(`Stok ${product.name} tidak mencukupi.`);
+        }
+    }
+
+    const items = payload.items.map((item) => {
+        const product = state.data.products.find(
+            (row) => row.id === item.product_id
+        );
+
+        product.stock = Number(product.stock) - Number(item.quantity);
+
+        return {
+            product_id: product.id,
+            product_name: product.name,
+            quantity: Number(item.quantity),
+            unit_price: Number(product.price),
+            line_total: Number(product.price) * Number(item.quantity)
+        };
+    });
+
+    const subtotal = items.reduce((sum, item) => sum + item.line_total, 0);
+    const pb1 = Math.round(subtotal * 0.10);
+    const total = subtotal + pb1;
+
+    state.data.sales.push({
+        ...payload,
+        id: `demo-sale-${crypto.randomUUID()}`,
+        subtotal_amount: subtotal,
+        pb1_amount: pb1,
+        total_amount: total,
+        created_at: new Date().toISOString(),
+        items
+    });
+
+    persist();
+}
+
+
+async function updateSale(payload) {
+    validateItems(payload.items);
+
+    if (state.mode === 'live') {
+        await request('rpc/update_sale', {
+            method: 'POST',
+            body: JSON.stringify({
+                sale_id: payload.id,
+                sale_payload: payload
+            })
+        });
+        await refresh();
+        return;
+    }
+
+    const sale = state.data.sales.find((item) => item.id === payload.id);
+    if (!sale) throw new Error('Transaksi tidak ditemukan.');
+
+    const available = new Map();
+    sale.items.forEach((item) =>
+        available.set(
+            item.product_id,
+            (available.get(item.product_id) || 0) + Number(item.quantity)
+        )
+    );
+
+    const requested = new Map();
+    payload.items.forEach((item) =>
+        requested.set(
+            item.product_id,
+            (requested.get(item.product_id) || 0) + Number(item.quantity)
+        )
+    );
+
+    for (const [id, quantity] of requested) {
+        const product = state.data.products.find((row) => row.id === id);
+        if (!product) throw new Error('Produk tidak ditemukan.');
+
+        if (Number(product.stock) + (available.get(id) || 0) < quantity) {
+            throw new Error(`Stok ${product.name} tidak mencukupi.`);
+        }
+    }
+
+    state.data.products.forEach((product) => {
+        product.stock =
+            Number(product.stock) +
+            (available.get(product.id) || 0) -
+            (requested.get(product.id) || 0);
+    });
+
+    sale.items = payload.items.map((item) => {
+        const product = state.data.products.find(
+            (row) => row.id === item.product_id
+        );
+
+        return {
+            product_id: product.id,
+            product_name: product.name,
+            quantity: Number(item.quantity),
+            unit_price: Number(product.price),
+            line_total: Number(product.price) * Number(item.quantity)
+        };
+    });
+
+    const subtotal = sale.items.reduce(
+        (sum, item) => sum + item.line_total,
+        0
+    );
+    const pb1 = Math.round(subtotal * 0.10);
+
+    sale.customer_id = payload.customer_id || null;
+    sale.payment_method = payload.payment_method;
+    sale.subtotal_amount = subtotal;
+    sale.pb1_amount = pb1;
+    sale.total_amount = subtotal + pb1;
+
+    persist();
+}
 
 	async function connect(url, key) {
 		if (!url || !key) throw new Error('Project URL dan anon key harus diisi.');
