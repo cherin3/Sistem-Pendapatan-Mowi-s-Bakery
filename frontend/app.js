@@ -218,58 +218,130 @@ function printReceipt(saleId) {
     `;
   }).join('');
 
- 
+
+
 const bunny = `
-  <svg class="bunny" viewBox="0 0 180 120" xmlns="http://www.w3.org/2000/svg">
-    <g stroke="#805044" stroke-width="3.5"
-       stroke-linecap="round" stroke-linejoin="round">
+<svg class="bunny" viewBox="0 0 180 150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="headClip">
+      <path d="
+        M55 48
+        Q48 37 57 29
+        Q64 21 73 29
+        Q90 17 107 29
+        Q117 21 124 30
+        Q133 38 125 49
+        Q140 65 132 88
+        Q128 111 108 119
+        Q90 127 72 119
+        Q51 111 47 89
+        Q40 66 55 48Z"/>
+    </clipPath>
+  </defs>
 
-      <!-- Telinga floppy lop -->
-      <path d="M65 42
-        C54 20 39 15 31 29
-        C21 46 32 76 45 81
-        C57 85 65 67 65 42Z"
-        fill="#f1d7cd"/>
+  <!-- Droopy left ear -->
+  <path d="
+    M59 45
+    C45 32 32 35 27 48
+    C20 67 28 98 40 111
+    C47 119 57 113 59 101
+    C63 83 65 60 59 45Z"
+    fill="#ead0c4" stroke="#805044" stroke-width="2.8"/>
 
-      <path d="M115 42
-        C126 20 141 15 149 29
-        C159 46 148 76 135 81
-        C123 85 115 67 115 42Z"
-        fill="#f1d7cd"/>
+  <path d="
+    M48 48
+    C36 48 34 59 37 76
+    C39 91 45 103 49 104
+    C55 100 55 81 55 64
+    C55 55 53 50 48 48Z"
+    fill="#d9a9a0"/>
 
-      <!-- Kepala bulat -->
-      <path d="M48 68
-        C48 38 64 20 90 20
-        C116 20 132 38 132 68
-        C132 91 115 103 90 103
-        C65 103 48 91 48 68Z"
-        fill="#fff7f1"/>
+  <!-- Droopy right ear -->
+  <path d="
+    M121 45
+    C135 32 148 35 153 48
+    C160 67 152 98 140 111
+    C133 119 123 113 121 101
+    C117 83 115 60 121 45Z"
+    fill="#ead0c4" stroke="#805044" stroke-width="2.8"/>
 
-      <!-- Mata -->
-      <ellipse cx="75" cy="65" rx="3.5" ry="5" fill="#805044" stroke="none"/>
-      <ellipse cx="105" cy="65" rx="3.5" ry="5" fill="#805044" stroke="none"/>
+  <path d="
+    M132 48
+    C144 48 146 59 143 76
+    C141 91 135 103 131 104
+    C125 100 125 81 125 64
+    C125 55 127 50 132 48Z"
+    fill="#d9a9a0"/>
 
-      <!-- Hidung dan mulut -->
-      <path d="M86 75 Q90 70 94 75 Q90 80 86 75Z"
-        fill="#c98787" stroke="none"/>
-      <path d="M90 79 L90 84 M90 84 Q85 89 82 85 M90 84 Q95 89 98 85"
-        fill="none" stroke-width="2"/>
+  <!-- Fluffy head -->
+  <path d="
+    M55 48
+    Q48 37 57 29
+    Q64 21 73 29
+    Q90 17 107 29
+    Q117 21 124 30
+    Q133 38 125 49
+    Q140 65 132 88
+    Q128 111 108 119
+    Q90 127 72 119
+    Q51 111 47 89
+    Q40 66 55 48Z"
+    fill="#fff7f0" stroke="#805044"
+    stroke-width="2.8" stroke-linejoin="round"/>
 
-      <!-- Pipi -->
-      <ellipse cx="62" cy="78" rx="8" ry="5"
-        fill="#eab9b0" stroke="none" opacity=".7"/>
-      <ellipse cx="118" cy="78" rx="8" ry="5"
-        fill="#eab9b0" stroke="none" opacity=".7"/>
+  <!-- Fur texture -->
+  <g clip-path="url(#headClip)" fill="none"
+     stroke="#c9a99b" stroke-width="1.5"
+     stroke-linecap="round" opacity=".8">
+    <path d="M61 38 Q58 32 62 29"/>
+    <path d="M72 32 Q70 27 74 25"/>
+    <path d="M82 29 Q80 24 84 22"/>
+    <path d="M96 29 Q99 24 96 22"/>
+    <path d="M109 34 Q114 28 117 31"/>
+    <path d="M53 53 Q48 49 50 44"/>
+    <path d="M47 69 Q42 65 45 60"/>
+    <path d="M49 88 Q43 85 46 80"/>
+    <path d="M57 106 Q51 103 53 98"/>
+    <path d="M68 116 Q63 112 65 108"/>
+    <path d="M81 120 Q76 116 78 112"/>
+    <path d="M98 120 Q103 116 101 112"/>
+    <path d="M112 114 Q118 111 115 106"/>
+    <path d="M128 91 Q134 86 130 81"/>
+    <path d="M130 69 Q136 65 132 60"/>
+    <path d="M120 49 Q126 44 122 40"/>
+    <path d="M67 48 Q63 44 66 40"/>
+    <path d="M111 49 Q116 44 113 40"/>
+    <path d="M59 79 Q54 75 58 71"/>
+    <path d="M121 79 Q126 75 122 71"/>
+  </g>
 
-      <!-- Kaki depan -->
-      <path d="M65 91 C58 88 53 94 55 101
-        C57 109 75 110 80 102 L80 96Z"
-        fill="#fff7f1"/>
-      <path d="M115 91 C122 88 127 94 125 101
-        C123 109 105 110 100 102 L100 96Z"
-        fill="#fff7f1"/>
-    </g>
-  </svg>
+  <!-- Face -->
+  <g fill="#805044">
+    <ellipse cx="74" cy="77" rx="3.2" ry="4.2"/>
+    <ellipse cx="106" cy="77" rx="3.2" ry="4.2"/>
+  </g>
+
+  <ellipse cx="90" cy="88" rx="5" ry="3.5" fill="#c98787"/>
+  <path d="M90 91 Q90 96 85 97 M90 96 Q95 97 95 94"
+        fill="none" stroke="#805044"
+        stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Cheeks -->
+  <ellipse cx="64" cy="91" rx="8" ry="4"
+           fill="#e8b8ad" opacity=".65"/>
+  <ellipse cx="116" cy="91" rx="8" ry="4"
+           fill="#e8b8ad" opacity=".65"/>
+
+  <!-- Small fluffy chest -->
+  <path d="
+    M73 117 Q78 111 83 117
+    Q90 111 96 117
+    Q103 112 108 118
+    Q102 131 90 131
+    Q78 131 73 117Z"
+    fill="#fff7f0" stroke="#805044"
+    stroke-width="2"/>
+</svg>
 `;
 
   printWindow.onload = () => {
