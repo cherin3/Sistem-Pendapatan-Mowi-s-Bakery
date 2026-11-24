@@ -161,22 +161,47 @@
 		return response.json();
 	}
 
-	async function refresh() {
-		const [customers, products, sales, saleItems] = await Promise.all([
-			request('customers?select=*&order=created_at.desc'),
-			request('products?select=*&is_active=eq.true&order=name.asc'),
-			request('sales?select=*&order=created_at.desc'),
-			request('sale_items?select=*')
-		]);
-		const bySale = new Map();
-		saleItems.forEach((item) => {
-			const group = bySale.get(item.sale_id) || [];
-			group.push(item);
-			bySale.set(item.sale_id, group);
-		});
-		state.data = { customers, products, sales: sales.map((sale) => ({ ...sale, items: bySale.get(sale.id) || [] })) };
-		state.mode = 'live';
-	}
+
+async function refresh() {
+    const [customers, products, sales, saleItems, profiles] = await Promise.all([
+        request('customers?select=*&order=created_at.desc'),
+        request('products?select=*&is_active=eq.true&order=name.asc'),
+        request('sales?select=*&order=created_at.desc'),
+        request('sale_items?select=*'),
+        request(`profiles?select=id,full_name,role&id=eq.${state.session.user.id}`)
+    ]);
+
+    if (!profiles.length) {
+        throw new Error('Profil pengguna tidak ditemukan.');
+    }
+
+    const profile = profiles[0];
+
+    if (!['owner', 'cashier'].includes(profile.role)) {
+        throw new Error('Role pengguna tidak valid.');
+    }
+
+    const bySale = new Map();
+
+    saleItems.forEach((item) => {
+        const group = bySale.get(item.sale_id) || [];
+        group.push(item);
+        bySale.set(item.sale_id, group);
+    });
+
+    state.profile = profile;
+
+    state.data = {
+        customers,
+        products,
+        sales: sales.map((sale) => ({
+            ...sale,
+            items: bySale.get(sale.id) || []
+        }))
+    };
+
+    state.mode = 'live';
+}
 
 	async function initialize() {
 		state.data = null;
@@ -446,6 +471,7 @@ async function updateSale(payload) {
 		get mode() { return state.mode; },
 		get config() { return state.config; },
 		get user() { return state.session?.user || null; },
+		get profile() { return state.profile || null; },
 		initialize, login, logout, create, update, remove, createSale, updateSale
 	};
 })();
