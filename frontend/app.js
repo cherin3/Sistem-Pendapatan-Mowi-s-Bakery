@@ -48,18 +48,31 @@ document.getElementById('stat-month').textContent = money(
     document.getElementById('stat-today-note').textContent = `${today.length} transaksi tercatat`;
   }
 
-  function renderStockAlert() {
+function renderStockAlert() {
     const lowStock = state.data.products
-      .filter((product) => product.is_active !== false && Number(product.stock) <= lowStockThreshold)
+      .filter((product) =>
+        product.is_active !== false &&
+        product.category !== 'Beverage' &&
+        Number(product.stock) <= lowStockThreshold
+      )
       .sort((first, second) => Number(first.stock) - Number(second.stock));
+
     const alert = document.getElementById('stock-alert');
     alert.hidden = lowStock.length === 0;
     if (!lowStock.length) return;
-    document.getElementById('stock-alert-title').textContent = `Stok menipis · ${lowStock.length} produk`;
-    const shownProducts = lowStock.slice(0, 3).map((product) => `${safe(product.name)} (${Number(product.stock) === 0 ? 'habis' : `${Number(product.stock)} pcs`})`);
+
+    document.getElementById('stock-alert-title').textContent =
+      `Stok menipis · ${lowStock.length} produk`;
+
+    const shownProducts = lowStock.slice(0, 3).map((product) =>
+      `${safe(product.name)} (${Number(product.stock) === 0 ? 'habis' : `${Number(product.stock)} pcs`})`
+    );
+
     const remaining = lowStock.length - shownProducts.length;
-    document.getElementById('stock-alert-products').textContent = `${shownProducts.join(', ')}${remaining > 0 ? `, +${remaining} lainnya` : ''}`;
-  }
+
+    document.getElementById('stock-alert-products').textContent =
+      `${shownProducts.join(', ')}${remaining > 0 ? `, +${remaining} lainnya` : ''}`;
+}
 
 
 function renderChart() {
@@ -164,10 +177,12 @@ function renderChart() {
           </td>
           <td>${safe(product.category || 'Lainnya')}</td>
           <td>
-            ${Number(product.stock) <= lowStockThreshold
-              ? `<span class="stock-low">${Number(product.stock)} tersisa</span>`
-              : `${Number(product.stock)} pcs`}
-          </td>
+  ${product.category === 'Beverage'
+    ? '<span class="stock-fresh">Freshly Made</span>'
+    : Number(product.stock) <= lowStockThreshold
+      ? `<span class="stock-low">${Number(product.stock)} tersisa</span>`
+      : `${Number(product.stock)} pcs`}
+</td>
           <td class="align-right table-total">${money(product.price)}</td>
           <td class="row-actions">
             <button type="button" class="icon-action"
@@ -714,7 +729,7 @@ function switchView(view) {
   function addSaleRow(item = null) {
     const row = document.createElement('div');
     row.className = 'sale-item-row';
-    row.innerHTML = `<select aria-label="Produk"><option value="">Pilih produk</option>${state.data.products.map((product) => `<option value="${safe(product.id)}">${safe(product.name)} · ${money(product.price)} (stok ${Number(product.stock)})</option>`).join('')}</select><input type="number" min="1" value="${item ? Number(item.quantity) : 1}" aria-label="Jumlah"><button class="remove-item" type="button" aria-label="Hapus item">×</button>`;
+    row.innerHTML = `<select aria-label="Produk"><option value="">Pilih produk</option>${state.data.products.map((product) => `<option value="${safe(product.id)}">${safe(product.name)} · ${money(product.price)} (${product.category === 'Beverage' ? 'Freshly Made' : `stok ${Number(product.stock)}`})</option>`).join('')}</select><input type="number" min="1" value="${item ? Number(item.quantity) : 1}" aria-label="Jumlah"><button class="remove-item" type="button" aria-label="Hapus item">×</button>`;
     row.querySelector('select').value = item?.product_id || '';
     row.addEventListener('input', updateSaleTotal);
     row.querySelector('.remove-item').addEventListener('click', () => { row.remove(); updateSaleTotal(); });
