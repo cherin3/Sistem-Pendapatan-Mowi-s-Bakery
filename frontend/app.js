@@ -228,7 +228,7 @@ function printReceipt(saleId) {
   const saleDate = new Date(sale.created_at);
   const subtotal = Number(sale.subtotal_amount ?? sale.total_amount);
   const pb1 = Number(sale.pb1_amount ?? 0);
-  const total = Number(sale.total_amount); 
+  const total = Number(sale.total_amount);
 
   const itemRows = sale.items.map((item) => {
     const name = safe(item.product_name || productName(item.product_id));
@@ -237,75 +237,119 @@ function printReceipt(saleId) {
     const lineTotal = Number(item.line_total ?? unitPrice * quantity);
 
     return `
-      <div class="item">
-        <div class="item-name">${name}</div>
-        <div class="item-detail">
-          <span>${quantity} × ${money(unitPrice)}</span>
-          <span class="item-price">${money(lineTotal)}</span>
-        </div>
+      <div class="item-row">
+        <span class="item-name">${name}</span>
+        <span class="item-qty">${quantity}</span>
+        <span class="item-price">${money(lineTotal)}</span>
       </div>
     `;
   }).join('');
 
+  const bunny = `
+<svg class="bunny" viewBox="0 0 280 82" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- Horizontal divider lines -->
+  <line x1="12" y1="67" x2="80" y2="67" stroke="#9e7b70" stroke-width="1.35" stroke-linecap="round"/>
+  <line x1="127" y1="67" x2="153" y2="67" stroke="#9e7b70" stroke-width="1.35" stroke-linecap="round"/>
+  <line x1="173" y1="67" x2="192" y2="67" stroke="#9e7b70" stroke-width="1.35" stroke-linecap="round"/>
+  <line x1="203" y1="67" x2="268" y2="67" stroke="#9e7b70" stroke-width="1.35" stroke-linecap="round"/>
 
+  <!-- Base silhouette: seamless top head + left & right floppy lop ears -->
+  <path d="M 108 67
+           L 106 59
+           C 101 65, 95 68, 90 66
+           C 84 64, 83 57, 87 49
+           C 93 38, 104 28, 115 21
+           C 119 18, 124 17, 128 17
+           C 131 15, 135 15, 138 16
+           C 141 14, 145 15, 148 16
+           C 152 16, 157 18, 162 21
+           C 173 28, 185 38, 191 49
+           C 195 57, 194 63, 188 64
+           C 182 65, 177 59, 173 53
+           L 172 67 Z"
+        fill="#faede4" stroke="none"/>
 
+  <!-- Soft blush shading on floppy ears -->
+  <path d="M 114 27
+           C 103 34, 93 43, 88 52
+           C 85 58, 86 64, 91 65
+           C 96 66, 102 62, 107 54
+           C 108 46, 111 37, 114 27 Z"
+        fill="#efd3c8" opacity="0.85"/>
+  <path d="M 165 27
+           C 176 34, 186 43, 190 51
+           C 193 57, 192 62, 187 63
+           C 182 64, 177 58, 172 50
+           C 170 43, 168 35, 165 27 Z"
+        fill="#efd3c8" opacity="0.85"/>
 
+  <!-- Outer stroke of head + ears (seamless top crown into drooping lop ears) -->
+  <path d="M 106 59
+           C 101 65, 95 68, 90 66
+           C 84 64, 83 57, 87 49
+           C 93 38, 104 28, 115 21
+           C 119 18, 124 17, 128 17
+           C 131 15, 135 15, 138 16
+           C 141 14, 145 15, 148 16
+           C 152 16, 157 18, 162 21
+           C 173 28, 185 38, 191 49
+           C 195 57, 194 63, 188 64
+           C 182 65, 177 59, 172 51"
+        fill="none" stroke="#7a574d" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>
 
-const bunny = `
-<svg class="bunny" viewBox="0 0 180 150" xmlns="http://www.w3.org/2000/svg">
+  <!-- Inner cheek/ear separation creases starting partway down -->
+  <path d="M 114 34
+           C 109 43, 106 52, 107 62"
+        fill="none" stroke="#7a574d" stroke-width="1.85" stroke-linecap="round"/>
+  <path d="M 165 34
+           C 171 43, 174 51, 172 61"
+        fill="none" stroke="#7a574d" stroke-width="1.85" stroke-linecap="round"/>
 
-  <!-- Left ear -->
-  <path d="M56 66
-    C48 49 43 20 53 13
-    C64 5 75 36 77 61
-    Q67 63 56 66Z"
-    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
+  <!-- Soft rosy cheeks -->
+  <ellipse cx="117" cy="51.5" rx="5.6" ry="3.2" fill="#edb9b2" opacity="0.78"/>
+  <ellipse cx="162" cy="50.5" rx="5.6" ry="3.2" fill="#edb9b2" opacity="0.78"/>
 
-  <path d="M57 51
-    C53 35 51 19 56 17
-    C62 18 68 41 70 55Z"
-    fill="#e8b5ad"/>
+  <!-- Dark brown oval eyes -->
+  <ellipse cx="126.5" cy="44.5" rx="2.6" ry="3.6" fill="#634239"/>
+  <ellipse cx="153" cy="43.8" rx="2.6" ry="3.6" fill="#634239"/>
 
-  <!-- Right ear -->
-  <path d="M103 61
-    C105 36 116 5 127 13
-    C137 20 132 49 124 66
-    Q113 63 103 61Z"
-    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
+  <!-- Cute little nose & mouth -->
+  <path d="M 138.3 47.2 Q 140 48.5 141.7 47.2
+           M 140 48.1 L 140 51.2
+           M 140 51.2 Q 137.5 53 135.8 51.5
+           M 140 51.2 Q 142.5 53 144.2 51.5"
+        fill="none" stroke="#7a574d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path d="M110 55
-    C113 39 120 18 125 17
-    C131 19 126 37 121 52Z"
-    fill="#e8b5ad"/>
+  <!-- Left chubby paw resting on the line -->
+  <path d="M 107 66.5
+           C 106 60, 111 56.5, 117.5 56.5
+           C 124 56.5, 128.5 60, 127.5 66.5
+           C 127 69.8, 124 71, 121.5 69.8
+           C 119.5 71.2, 115.5 71.2, 113.5 69.8
+           C 111 71, 107.5 69.8, 107 66.5 Z"
+        fill="#faede4" stroke="#7a574d" stroke-width="1.85" stroke-linejoin="round"/>
+  <path d="M 113.8 66.8 L 113.8 69.7 M 121.2 66.8 L 121.2 69.7"
+        stroke="#7a574d" stroke-width="1.35" stroke-linecap="round"/>
 
-  <!-- Round face -->
-  <ellipse cx="90" cy="88" rx="49" ry="42"
-    fill="#fff5ed" stroke="#805044" stroke-width="2.5"/>
+  <!-- Right chubby paw resting on the line -->
+  <path d="M 152.5 66.2
+           C 151.5 59.7, 156.5 56.2, 163 56.2
+           C 169.5 56.2, 174 59.7, 173 66.2
+           C 172.5 69.5, 169.5 70.7, 167 69.5
+           C 165 70.9, 161 70.9, 159 69.5
+           C 156.5 70.7, 153 69.5, 152.5 66.2 Z"
+        fill="#faede4" stroke="#7a574d" stroke-width="1.85" stroke-linejoin="round"/>
+  <path d="M 159.3 66.5 L 159.3 69.4 M 166.7 66.5 L 166.7 69.4"
+        stroke="#7a574d" stroke-width="1.35" stroke-linecap="round"/>
 
-  <!-- Eyes -->
-  <ellipse cx="73" cy="82" rx="3.5" ry="4.5"
-    fill="#68483e"/>
-  <ellipse cx="107" cy="82" rx="3.5" ry="4.5"
-    fill="#68483e"/>
-
-  <!-- Nose -->
-  <path d="M85 94 Q90 89 95 94
-    Q90 101 85 94Z"
-    fill="#d58e91"/>
-
-  <!-- Mouth -->
-  <path d="M90 99 L90 104
-    M90 104 Q85 109 81 105
-    M90 104 Q95 109 99 105"
-    fill="none" stroke="#805044"
-    stroke-width="1.7" stroke-linecap="round"/>
-
-  <!-- Blush -->
-  <ellipse cx="62" cy="96" rx="8" ry="4.5"
-    fill="#e9b5ae" opacity=".75"/>
-  <ellipse cx="118" cy="96" rx="8" ry="4.5"
-    fill="#e9b5ae" opacity=".75"/>
-
+  <!-- Floating little heart on upper right -->
+  <path d="M 203 28
+           C 203 24.8, 198.5 23.5, 197 26.8
+           C 195.5 23.5, 191 24.8, 191 28
+           C 191 32, 197 35.2, 197 36.8
+           C 197 35.2, 203 32, 203 28 Z"
+        transform="rotate(14 197 30)"
+        fill="#ebd0c8" stroke="#7a574d" stroke-width="1.7" stroke-linejoin="round"/>
 </svg>
 `;
 
@@ -318,7 +362,7 @@ const bunny = `
 
   printWindow.document.write(`
     <!doctype html>
-    <html lang="en">
+    <html lang="id">
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -335,202 +379,222 @@ const bunny = `
         }
 
         body {
-          width: 72mm;
+          width: 74mm;
           margin: 0 auto;
-          padding: 15px 13px;
-          background: #fffaf6;
-          color: #68483e;
-          font-family: Georgia, serif;
+          padding: 14px 10px;
+          background: #f5ece6;
+          color: #634038;
+          font-family: Georgia, "Times New Roman", serif;
           font-size: 12px;
-          line-height: 1.5;
+          line-height: 1.45;
         }
 
         .receipt {
-          border-top: 5px dotted #d8a49d;
-          border-bottom: 5px dotted #d8a49d;
-          padding: 17px 0;
+          position: relative;
+          background: #fdf6f0;
+          padding: 18px 16px 20px;
+          border-radius: 10px;
+          box-shadow: 0 4px 20px rgba(90, 55, 45, 0.12);
+          overflow: hidden;
+        }
+
+        .receipt::before,
+        .receipt::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 10px;
+          background-size: 16px 10px;
+          background-repeat: repeat-x;
+        }
+
+        .receipt::before {
+          top: -5px;
+          background-image: radial-gradient(circle at 8px 0px, #f5ece6 5.5px, transparent 6px);
+        }
+
+        .receipt::after {
+          bottom: -5px;
+          background-image: radial-gradient(circle at 8px 10px, #f5ece6 5.5px, transparent 6px);
         }
 
         .header {
           text-align: center;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #c99a90;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #cbb0a8;
         }
 
         .bunny-wrap {
           display: flex;
           justify-content: center;
           align-items: center;
-          gap: 7px;
-          margin-bottom: 2px;
+          margin: 2px -4px 4px;
         }
 
         .bunny {
-          width: 105px;
-          height: 72px;
-        }
-
-        .heart {
-          color: #bd777b;
-          font-size: 18px;
+          width: 100%;
+          max-width: 245px;
+          height: auto;
+          display: block;
         }
 
         h1 {
           font-size: 27px;
+          font-weight: bold;
           font-style: italic;
           margin: 0;
-          line-height: 1.2;
-          color: #71483f;
+          line-height: 1.15;
+          color: #6b4239;
         }
 
         .tagline {
           font-size: 11px;
           font-style: italic;
-          color: #a8756e;
-          margin-top: 5px;
+          color: #8f655c;
+          margin-top: 4px;
         }
 
         .meta {
-          padding: 13px 0;
-          border-bottom: 1px solid #c99a90;
+          padding: 11px 2px;
+          border-bottom: 1px solid #cbb0a8;
         }
 
         .meta-row {
           display: grid;
-          grid-template-columns: 78px 8px minmax(0, 1fr);
-          gap: 3px;
-          margin: 5px 0;
-          font-size: 10px;
+          grid-template-columns: 74px 8px minmax(0, 1fr);
+          gap: 2px;
+          margin: 4px 0;
+          font-size: 10.5px;
           align-items: start;
         }
 
         .meta-label {
           font-style: italic;
+          color: #6d483f;
         }
 
         .meta-value {
+          color: #5c3a32;
           overflow-wrap: anywhere;
         }
 
         .items {
-          padding: 13px 0 10px;
+          padding: 12px 0 10px;
+          border-bottom: 1px solid #cbb0a8;
         }
 
         .items-heading {
-          display: flex;
-          justify-content: space-between;
-          padding: 7px 9px;
-          margin-bottom: 9px;
-          border-radius: 20px;
-          background: #f3dfda;
-          color: #744b42;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 36px 76px;
+          align-items: center;
+          padding: 6px 12px;
+          margin-bottom: 8px;
+          border-radius: 999px;
+          background: #edd6d0;
+          color: #694138;
           font-weight: bold;
           font-size: 11px;
         }
 
-        .items-heading span:first-child {
-          flex: 1;
-        }
-
         .items-heading span:nth-child(2) {
-          width: 35px;
           text-align: center;
         }
 
         .items-heading span:last-child {
-          width: 90px;
           text-align: right;
         }
 
-        .item {
-          padding: 5px 5px;
+        .item-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 36px 76px;
+          align-items: baseline;
+          padding: 4px 10px;
+          font-size: 11px;
+          color: #5e3b33;
         }
 
         .item-name {
-          font-weight: bold;
-          font-size: 11px;
           overflow-wrap: anywhere;
+          padding-right: 6px;
         }
 
-        .item-detail {
-          display: flex;
-          justify-content: space-between;
-          gap: 5px;
-          color: #97756b;
-          font-size: 10px;
-          margin-top: 2px;
+        .item-qty {
+          text-align: center;
         }
 
         .item-price {
-          color: #68483e;
+          text-align: right;
           white-space: nowrap;
         }
 
         .payment-summary {
-  margin-top: 12px;
-}
+          padding-top: 8px;
+        }
 
-.summary-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 10px;
-  font-size: 11px;
-}
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 3px 10px;
+          font-size: 10.5px;
+          color: #7c564d;
+        }
 
-.summary-row strong {
-  white-space: nowrap;
-  font-weight: normal;
-}
+        .summary-row strong {
+          white-space: nowrap;
+          font-weight: normal;
+          color: #5e3b33;
+        }
 
         .total {
           display: flex;
           justify-content: space-between;
           align-items: center;
           gap: 5px;
-          padding: 11px 12px;
-          background: #f1d9d4;
-          border-radius: 22px;
+          padding: 9px 14px;
+          background: #edd6d0;
+          border-radius: 999px;
           font-size: 15px;
           font-weight: bold;
-          margin-top: 5px;
+          color: #5b362e;
+          margin-top: 6px;
         }
 
         .total strong {
           white-space: nowrap;
-          font-size: 14px;
+          font-size: 15px;
         }
 
         .thanks {
           text-align: center;
-          margin-top: 13px;
-          padding: 12px 8px;
-          background: #f8e9e5;
-          border-radius: 22px;
-          color: #93665e;
-          font-size: 11px;
+          margin-top: 10px;
+          padding: 10px 10px;
+          background: #f2ded9;
+          border-radius: 999px;
+          color: #7b5249;
+          font-size: 10.5px;
+          line-height: 1.35;
         }
 
         .thanks p {
-          margin: 3px 0;
+          margin: 2px 0;
         }
 
         .thanks .closing {
           font-style: italic;
         }
 
-        @media screen {
-          body {
-            margin: 15px auto;
-            box-shadow: 0 4px 20px rgba(90, 55, 45, .12);
-          }
-        }
-
         @media print {
           body {
-            background: #fffaf6;
+            background: #fdf6f0;
+            padding: 0;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+
+          .receipt {
+            box-shadow: none;
           }
         }
       </style>
@@ -542,7 +606,6 @@ const bunny = `
         <header class="header">
           <div class="bunny-wrap">
             ${bunny}
-            <span class="heart">♡</span>
           </div>
 
           <h1>Mowi's Bakery</h1>
@@ -585,22 +648,23 @@ const bunny = `
           ${itemRows}
         </section>
 
-<div class="payment-summary">
-  <div class="summary-row">
-    <span>Subtotal</span>
-    <strong>${money(subtotal)}</strong>
-  </div>
+        <div class="payment-summary">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>${money(subtotal)}</strong>
+          </div>
 
-  <div class="summary-row">
-    <span>PB1 (10%)</span>
-    <strong>${money(pb1)}</strong>
-  </div>
+          <div class="summary-row">
+            <span>PB1 (10%)</span>
+            <strong>${money(pb1)}</strong>
+          </div>
 
-  <div class="total">
-    <span>TOTAL</span>
-    <strong>${money(total)}</strong>
-  </div>
-</div>
+          <div class="total">
+            <span>Total</span>
+            <strong>${money(total)}</strong>
+          </div>
+        </div>
+
         <footer class="thanks">
           <p>♥ Thank you for choosing Mowi's Bakery!</p>
           <p class="closing">Have a lovely day ♡</p>
@@ -613,7 +677,6 @@ const bunny = `
 
   printWindow.document.close();
 }
-
   function showLogin(message = '') {
     document.getElementById('app-shell').hidden = true;
     document.getElementById('auth-screen').hidden = false;
