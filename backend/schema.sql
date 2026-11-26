@@ -136,13 +136,15 @@ BEGIN
       RAISE EXCEPTION 'Produk tidak ditemukan atau tidak aktif.';
     END IF;
 
-    IF selected_product.stock < requested_quantity THEN
-      RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
-    END IF;
+IF selected_product.category IS DISTINCT FROM 'Beverage' THEN
+  IF selected_product.stock < requested_quantity THEN
+    RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
+  END IF;
 
-    UPDATE public.products
-    SET stock = stock - requested_quantity
-    WHERE id = selected_product.id;
+  UPDATE public.products
+  SET stock = stock - requested_quantity
+  WHERE id = selected_product.id;
+END IF;
 
     INSERT INTO public.sale_items
       (sale_id, product_id, product_name, quantity, unit_price)
@@ -207,16 +209,17 @@ BEGIN
     RAISE EXCEPTION 'Pelanggan tidak ditemukan.';
   END IF;
 
-  UPDATE public.products AS product
-  SET stock = product.stock + prior.quantity
-  FROM (
-    SELECT product_id, SUM(quantity)::integer AS quantity
-    FROM public.sale_items
-    WHERE sale_items.sale_id = update_sale.sale_id
-      AND product_id IS NOT NULL
-    GROUP BY product_id
-  ) AS prior
-  WHERE product.id = prior.product_id;
+UPDATE public.products AS product
+SET stock = product.stock + prior.quantity
+FROM (
+  SELECT si.product_id, SUM(si.quantity)::integer AS quantity
+  FROM public.sale_items AS si
+  JOIN public.products AS p ON p.id = si.product_id
+  WHERE si.sale_id = update_sale.sale_id
+    AND p.category IS DISTINCT FROM 'Beverage'
+  GROUP BY si.product_id
+) AS prior
+WHERE product.id = prior.product_id;
 
   DELETE FROM public.sale_items
   WHERE sale_items.sale_id = update_sale.sale_id;
@@ -249,13 +252,15 @@ BEGIN
       RAISE EXCEPTION 'Produk tidak ditemukan atau tidak aktif.';
     END IF;
 
-    IF selected_product.stock < requested_quantity THEN
-      RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
-    END IF;
+IF selected_product.category IS DISTINCT FROM 'Beverage' THEN
+  IF selected_product.stock < requested_quantity THEN
+    RAISE EXCEPTION 'Stok % tidak mencukupi.', selected_product.name;
+  END IF;
 
-    UPDATE public.products
-    SET stock = stock - requested_quantity
-    WHERE id = selected_product.id;
+  UPDATE public.products
+  SET stock = stock - requested_quantity
+  WHERE id = selected_product.id;
+END IF;
 
     INSERT INTO public.sale_items
       (sale_id, product_id, product_name, quantity, unit_price)
